@@ -27,9 +27,9 @@ MESSAGE=""
 
 case "$TOOL_NAME" in
   Write|Edit)
-    # 文档扩展名 — bash case 零子进程
-    EXT="${TOOL_ACTION##*.}"
-    case "${EXT,,}" in
+    # 文档扩展名 — 兼容 bash 3.2（macOS 默认）
+    EXT=$(printf '%s' "${TOOL_ACTION##*.}" | tr 'A-Z' 'a-z')
+    case "$EXT" in
       md|txt|json|yaml|yml|toml|ini|cfg|conf|csv|xml|svg|log)
         BEHAVIOR="allow" ;;
       *)

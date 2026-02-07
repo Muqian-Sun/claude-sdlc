@@ -14,9 +14,9 @@ fi
 
 [ -z "$FILE_PATH" ] && exit 0
 
-# 文档/配置文件扩展名 — bash case 零子进程
-EXT="${FILE_PATH##*.}"
-case "${EXT,,}" in
+# 文档/配置文件扩展名 — 兼容 bash 3.2（macOS 默认）
+EXT=$(printf '%s' "${FILE_PATH##*.}" | tr 'A-Z' 'a-z')
+case "$EXT" in
   md|txt|json|yaml|yml|toml|ini|cfg|conf|gitignore|editorconfig|prettierrc|eslintrc|csv|xml|svg|lock|log)
     exit 0 ;;
 esac
