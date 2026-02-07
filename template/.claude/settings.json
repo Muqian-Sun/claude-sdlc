@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "type": "command",
+        "command": "bash .claude/hooks/check-phase-write.sh"
+      },
+      {
+        "matcher": "Bash",
+        "type": "command",
+        "command": "bash .claude/hooks/check-phase-test.sh"
+      }
+    ],
+    "Stop": [
+      {
+        "type": "prompt",
+        "prompt": "在回复用户之前，请执行 SDLC 合规自检：\n1. 确认当前 SDLC 阶段（检查 CLAUDE.md 中的 current_phase）\n2. 确认本次回复中使用的工具是否在当前阶段允许范围内\n3. 如果进行了文件修改或重要决策，确保 CLAUDE.md 的「当前项目状态」已更新\n4. 如果即将完成当前阶段，提醒用户可使用 /phase next 推进\n如果发现任何偏离规范的行为，立即纠正并向用户说明。"
+      }
+    ],
+    "PreCompact": [
+      {
+        "type": "command",
+        "command": "echo '⚠️ 即将进行上下文压缩（Context Compaction）。\\n请确保 CLAUDE.md 中的「当前项目状态」区域已更新为最新状态，包括：\\n- current_phase（当前阶段）\\n- task_description（任务描述）\\n- modified_files（已修改文件列表）\\n- architecture_decisions（架构决策）\\n- todo_items（待办事项）\\n- key_context（关键上下文摘要）\\n\\n压缩后 CLAUDE.md 将被重新加载，上述信息将用于恢复工作状态。'"
+      }
+    ]
+  }
+}
