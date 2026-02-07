@@ -264,18 +264,50 @@ hooks:
 
 **重要：所有 Bash 命令必须写成单行，禁止换行。** 直接复制下方命令模板使用。
 
-1. **执行全部测试**（带覆盖率，按项目类型选一条执行）：
-   - Node.js (Jest): `npx jest --coverage 2>&1; echo "TEST_EXIT=$?"`
-   - Node.js (Vitest): `npx vitest run --coverage 2>&1; echo "TEST_EXIT=$?"`
-   - Python: `pytest --cov 2>&1; echo "TEST_EXIT=$?"`
-   - Go: `go test -coverprofile=cover.out ./... 2>&1; echo "TEST_EXIT=$?"`
-   - Rust: `cargo test 2>&1; echo "TEST_EXIT=$?"`
-   - 解析输出：通过数、失败数、跳过数
-   - 解析覆盖率：行覆盖率、分支覆盖率
-2. **判定标准**：
-   - 全部通过 + 行覆盖率 ≥80% → ✅
-   - 有失败 → 必须修复
-   - 覆盖率不足 → 记录为审查问题
+#### 核心效率规则（必须遵守）
+
+**测试只运行一次，从输出文件分析结果。禁止对同一测试文件/套件反复执行 `npx vitest run` / `npx jest` / `pytest` 等命令。**
+
+每次测试运行都有编译+启动开销（Vitest/Jest 通常 5-15 秒），反复运行同一测试会导致审查极慢。
+
+正确流程：
+1. **运行一次** → 完整输出保存到临时文件
+2. **从文件分析** → 用 Read 工具读取输出文件，提取通过/失败/覆盖率数据
+3. **如有失败** → 用 Read 读取输出文件中的错误信息，**批量修复所有问题**，然后再运行一次验证
+4. **整个审查最多运行 3 次测试**（首次 + 最多 2 次修复验证）
+
+#### 步骤 1：运行测试并保存完整输出
+
+按项目类型选一条执行（输出保存到临时文件）：
+- Node.js (Jest): `npx jest --coverage 2>&1 | tee /tmp/sdlc-test-output.txt; echo "TEST_EXIT=${PIPESTATUS[0]}"`
+- Node.js (Vitest): `npx vitest run --coverage 2>&1 | tee /tmp/sdlc-test-output.txt; echo "TEST_EXIT=${PIPESTATUS[0]}"`
+- Python: `pytest --cov 2>&1 | tee /tmp/sdlc-test-output.txt; echo "TEST_EXIT=${PIPESTATUS[0]}"`
+- Go: `go test -coverprofile=cover.out ./... 2>&1 | tee /tmp/sdlc-test-output.txt; echo "TEST_EXIT=${PIPESTATUS[0]}"`
+- Rust: `cargo test 2>&1 | tee /tmp/sdlc-test-output.txt; echo "TEST_EXIT=${PIPESTATUS[0]}"`
+
+#### 步骤 2：从输出文件分析结果
+
+**禁止重新运行测试来查看结果。** 用 Read 工具读取 `/tmp/sdlc-test-output.txt`，从中提取：
+- 通过数、失败数、跳过数
+- 行覆盖率、分支覆盖率
+- 失败测试的错误信息和堆栈
+
+#### 步骤 3：修复失败（如有）
+
+- 从步骤 2 读取的输出中**一次性收集所有失败信息**
+- **批量修复**所有失败的测试/代码（不要修一个跑一次）
+- 全部修复完成后，再运行一次测试验证（回到步骤 1）
+
+#### 判定标准
+- 全部通过 + 行覆盖率 ≥80% → ✅
+- 有失败 → 必须修复（批量修复后重跑一次，不要逐个修复逐个跑）
+- 覆盖率不足 → 记录为审查问题
+
+#### 禁止行为
+- ❌ 对同一测试文件运行 2 次以上 `npx vitest run` / `npx jest`
+- ❌ 用 `-t "test name"` 单独运行某个测试用例（启动开销一样大）
+- ❌ 用 `grep -E "FAIL|pass"` 过滤测试输出后再重跑来看别的信息
+- ❌ 每修复一个测试就重跑一次
 
 ### 审查清单
 
@@ -337,8 +369,8 @@ hooks:
 ```
 
 ### 未通过处理
-- 覆盖率不足 → 补充测试，重新 `/review`
-- 测试失败 → 修复代码或测试，重新 `/review`
+- 覆盖率不足 → 补充测试，重新 `/review`（重新审查时测试仍只跑一次）
+- 测试失败 → **从输出文件一次性收集所有失败信息，批量修复，再跑一次验证**，不要逐个修复逐个跑
 
 ---
 
