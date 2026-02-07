@@ -36,7 +36,7 @@
 5. 主 Agent 检查模块间接口一致性，解决冲突
 6. 更新 CLAUDE.md 的 modified_files
 
-**子 Agent 类型**：`subagent_type: "general-purpose"`
+**子 Agent 类型**：`subagent_type: "sdlc-coder"`（使用 `.claude/agents/sdlc-coder.md` 自定义 Agent，内置 PRD 编码约束和工具限制）
 
 ### P4 测试验证 — 并行编写测试
 
@@ -55,6 +55,8 @@
    - 测试文件命名和存放位置
 3. 汇总所有测试文件
 4. 主 Agent 统一执行全部测试（Bash），确认全部通过
+
+**子 Agent 类型**：`subagent_type: "sdlc-tester"`（使用 `.claude/agents/sdlc-tester.md` 自定义 Agent，内置 AAA 模式和覆盖率约束）
 
 ### P5 集成审查 — 并行审查维度
 
@@ -76,6 +78,8 @@
 2. 并行派发 3 个 Agent，每个 Agent 的 prompt 包含完整上下文 + 负责的审查维度
 3. 汇总所有审查结果
 4. 主 Agent 合并为 P5 集成审查报告
+
+**子 Agent 类型**：`subagent_type: "sdlc-reviewer"`（使用 `.claude/agents/sdlc-reviewer.md` 自定义 Agent，内置四环追溯和安全审查约束）
 
 ---
 

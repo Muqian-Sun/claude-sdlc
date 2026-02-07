@@ -29,16 +29,12 @@ if echo "$FILE_PATH" | grep -qiE "$DOC_EXTENSIONS"; then
   exit 0
 fi
 
-# 读取项目状态文件
+# 读取当前阶段（文件优先，环境变量兜底）
 STATE_FILE="${CLAUDE_PROJECT_DIR:-.}/.claude/project-state.md"
-
-# 如果找不到状态文件，默认放行（容错）
-if [ ! -f "$STATE_FILE" ]; then
-  exit 0
+if [ -f "$STATE_FILE" ]; then
+  CURRENT_PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$STATE_FILE" 2>/dev/null | head -1)
 fi
-
-# 读取当前阶段 — 兼容 macOS (BSD sed)
-CURRENT_PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$STATE_FILE" 2>/dev/null | head -1)
+CURRENT_PHASE="${CURRENT_PHASE:-$SDLC_PHASE}"
 
 # 如果无法确定阶段，默认放行（容错）
 if [ -z "$CURRENT_PHASE" ]; then

@@ -31,7 +31,21 @@ P1 需求 →【用户确认 PRD】→ 审查 → P2 设计 →【用户确认�
 
 ### 多 Agent 并行开发
 
-P3/P4/P5 阶段有独立模块时，用 Task 工具并行派发子 Agent 提高效率。详见 `.claude/rules/07-parallel-agents.md`。
+P3/P4/P5 阶段有独立模块时，用 Task 工具并行派发自定义 Agents 提高效率：
+- P3 编码：`sdlc-coder` Agent（`.claude/agents/sdlc-coder.md`）
+- P4 测试：`sdlc-tester` Agent（`.claude/agents/sdlc-tester.md`）
+- P5 审查：`sdlc-reviewer` Agent（`.claude/agents/sdlc-reviewer.md`）
+
+详见 `.claude/rules/07-parallel-agents.md`。
+
+### 新增防护 Hooks
+
+- **SubagentStop** — 子 Agent 完成时验证输出质量
+- **PostToolUseFailure** — 工具失败时注入恢复建议
+- **PermissionRequest** — 按阶段自动决策权限请求
+- **SessionEnd** — 会话结束时归档状态摘要
+
+详见 `.claude/rules/05-anti-amnesia.md`（十六层防御机制）。
 
 ---
 
@@ -58,9 +72,9 @@ P3/P4/P5 阶段有独立模块时，用 Task 工具并行派发子 Agent 提高�
 | 阶段 | 名称 | 阶段审查 | 允许工具 |
 |------|------|---------|---------|
 | P1 | 需求分析 | 需求审查 | Read, Glob, Grep, WebSearch, WebFetch |
-| P2 | 系统设计 | 设计审查 | Read, Glob, Grep, WebSearch, WebFetch, **Context7 MCP** |
+| P2 | 系统设计 | 设计审查 | Read, Glob, Grep, WebSearch, WebFetch, **Context7 MCP**, Chrome |
 | P3 | 编码实现 | 代码审查(含工具链) | + Write, Edit, Bash（非测试非git）, **Context7 MCP** |
-| P4 | 测试验证 | 测试审查(含覆盖率) | + Bash（含测试，非 git 提交） |
+| P4 | 测试验证 | 测试审查(含覆盖率) | + Bash（含测试，非 git 提交）, Chrome |
 | P5 | 集成审查 | 集成审查 | Read, Glob, Grep, Write/Edit（仅修复审查问题） |
 | P6 | 部署交付 | 交付审查 | + Bash（git/deploy）, Write/Edit（仅文档） |
 

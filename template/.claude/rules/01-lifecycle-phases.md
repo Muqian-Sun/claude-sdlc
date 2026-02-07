@@ -126,6 +126,7 @@
 - ✅ Read, Glob, Grep（代码分析）
 - ✅ WebSearch, WebFetch（技术调研）
 - ✅ Context7 MCP（查询最新官方文档）
+- ✅ Chrome（UI/UX 调研、竞品分析）
 - ❌ Write, Edit（禁止修改代码文件）
 - ❌ Bash 测试命令（禁止执行测试）
 
@@ -241,6 +242,7 @@
 - ✅ Read, Glob, Grep（代码分析）
 - ✅ Write, Edit（编写测试 / 修复 bug）
 - ✅ Bash（执行测试、构建、lint）
+- ✅ Chrome（视觉测试、E2E 验证）
 
 ---
 

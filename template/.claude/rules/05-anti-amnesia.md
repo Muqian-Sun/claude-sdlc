@@ -10,30 +10,38 @@ Claude Code 存在以下可能导致规范失效的场景：
 
 | 场景 | 风险 | 防御机制 |
 |------|------|---------|
-| 新会话启动 | Claude 不知道有规范 | CLAUDE.md + rules/ + project-state.md 自动加载 |
-| 长对话漂移 | Claude 渐渐忘记规范 | Stop hook 每次回复后强制自检 |
-| Context Compaction | 早期对话被压缩丢弃 | PreCompact hook 保存状态 → .claude/project-state.md 重新加载恢复 |
-| 用户催促跳过 | Claude 放弃规范直接执行 | Hooks 硬拦截违规操作 |
+| 新会话启动 | Claude 不知道有规范 | SessionStart hook 确定性注入 + CLAUDE.md + rules/ 自动加载 |
+| 长对话漂移 | Claude 渐渐忘记规范 | UserPromptSubmit 每次注入阶段 + Stop agent 回复后自检 |
+| Context Compaction | 早期对话被压缩丢弃 | PreCompact agent 保存状态 → SessionStart hook 恢复注入 |
+| 用户催促跳过 | Claude 放弃规范直接执行 | Hooks 硬拦截违规操作 + Permissions 声明式 deny |
 | 新任务覆盖 | 上一任务状态残留 | 新任务检测 → 自动重置 |
 | Claude 自行判断不需要 | Claude 认为简单任务不需要走流程 | CLAUDE.md 明确"所有开发任务必须" |
+| 子 Agent 脱离规范 | 并行子 Agent 不知道 SDLC 上下文 | SubagentStart hook 自动注入阶段+PRD+工具限制 |
+| 子任务结果不合规 | 子任务完成但代码不符合 PRD | TaskCompleted hook 提醒主 Agent 验证合规性 |
+| 敏感文件泄露 | Claude 读写 .env 等敏感文件 | Permissions deny 规则（平台层面强制，无法绕过） |
 
 ---
 
-## 2. 七层防御机制
+## 2. 十六层防御机制
 
-### 第一层：CLAUDE.md 启动指令（主动）
+### 第一层：SessionStart Hook — 确定性注入（主动）
+- **会话启动、恢复、compaction 后自动触发**
+- Shell 脚本读取 `.claude/project-state.md`，通过 `additionalContext` 确定性注入当前阶段和任务信息
+- 不依赖 Claude "读 CLAUDE.md 启动指令" 的不确定方式，改为**程序化确定性注入**
+- **这是最关键的防线 — 确保 Claude 在任何恢复场景下都立即获得 SDLC 上下文**
+
+### 第二层：CLAUDE.md + rules/ 规则文件（主动）
 - CLAUDE.md 在每次会话开始和 compaction 后自动加载
 - CLAUDE.md 通过 @import 引用 `.claude/project-state.md`，项目状态存储在该文件中
-- **「启动指令」要求 Claude 读到该文件时立即执行状态检查**
-- 这确保 Claude 不是被动接收规范，而是主动执行初始化
-- **这是最关键的防线**
-
-### 第二层：.claude/rules/ 规则文件（主动）
-- rules/ 目录下的所有 .md 文件自动加载到 Claude 的上下文中
-- 提供详细的阶段定义、编码规范、测试标准等
+- rules/ 目录下的 .md 文件自动加载（编码规范按文件类型生效、测试规范按测试文件生效）
 - 不受 compaction 影响（compaction 后重新加载）
 
-### 第三层：PreToolUse Hooks — 硬拦截（被动）
+### 第三层：UserPromptSubmit Hook — 每次提交注入（主动）
+- **每次用户提交 prompt 时自动触发**
+- 注入当前 SDLC 阶段提醒，确保 Claude 在处理每条用户消息前都知道当前阶段
+- **大幅减少长对话中的阶段漂移**
+
+### 第四层：PreToolUse Hooks — 硬拦截（被动）
 - 每次 Write/Edit/Bash 调用前，Shell 脚本自动检查阶段
 - **即使 Claude 完全忘记了规范，Hooks 也会阻止违规操作**
 - 拦截类型：
@@ -42,27 +50,74 @@ Claude Code 存在以下可能导致规范失效的场景：
   - P6 之前 git commit/push → 被 check-phase-test.sh 拦截
 - 这是**不依赖 Claude 自觉性的被动安全网**
 
-### 第四层：PostToolUse Hook — 状态同步（主动）
-- 每次 Write/Edit 操作后，prompt hook 提醒 Claude 更新 .claude/project-state.md
+### 第五层：PostToolUse Hook — 状态同步（主动）
+- 每次 Write/Edit 操作后，通过 `additionalContext` 提醒 Claude 更新 .claude/project-state.md
 - 确保 modified_files 列表实时最新（状态存储在 .claude/project-state.md 中）
 - 为 compaction 后的恢复提供准确的文件清单
 
-### 第五层：Stop Hook — 回复后审查（主动）
+### 第六层：Stop Hook — 回复后审查（主动，agent 类型）
 - 每次回复完成后触发
-- **强制 Claude 用 Read 工具重新读取 .claude/project-state.md**，而非依赖记忆
-- 检查阶段合规性、状态最新性
+- **agent 类型**：可以实际调用 Read 工具读取 `.claude/project-state.md`，而非依赖对话上下文判断
+- 检查阶段合规性、状态最新性、工作完成度
 - 发现偏离时立即纠正
 
-### 第六层：PreCompact Hook — 压缩前保存（主动）
-- **prompt 类型**，直接指令 Claude 在压缩前保存所有状态
-- 要求 Claude 用 Read 读取 .claude/project-state.md 确认状态，用 Edit 更新缺失信息
-- 特别要求写入 key_context 摘要到 .claude/project-state.md，确保恢复时有足够上下文
+### 第七层：PreCompact Hook — 压缩前保存（主动，agent 类型）
+- **agent 类型**：可以实际调用 Read/Edit 工具检查并更新 `.claude/project-state.md`
+- 自动检查所有字段是否最新，缺失字段自动补充
+- 特别确保 key_context 摘要已写入，供压缩后恢复使用
 
-### 第七层：用户命令（按需）
+### 第八层：SubagentStart Hook — 子 Agent 上下文注入（主动）
+- **子 Agent 启动时自动触发**
+- 注入当前 SDLC 阶段、任务描述、PRD 摘要和该阶段的工具限制
+- 确保并行子 Agent（P3/P4/P5）自动获得完整 SDLC 上下文
+- **防止子 Agent 脱离 PRD 范围或违反阶段规范**
+
+### 第九层：TaskCompleted Hook — 子任务完成验证（主动）
+- **子任务标记完成时自动触发**（仅 P3-P5 自动驱动阶段）
+- 提醒主 Agent 验证：modified_files 已更新、代码符合 PRD、无 PRD 外代码
+- **防止不合规的子任务结果进入下一阶段**
+
+### 第十层：Permissions 声明式权限（被动）
+- **声明式安全规则，无法被 Claude 绕过**
+- deny 规则：禁止读写 .env 文件（即使 Claude 忘记规范，声明式 deny 也无法绕过）
+- allow 规则：安全的 git 查询和 lint 操作无需权限弹窗，减少操作摩擦
+- **这是超越 Hooks 的硬性安全保障 — 不依赖脚本执行，由 Claude Code 平台层面强制执行**
+
+### 第十一层：statusLine — 实时状态显示（被动）
+- 终端底部持续显示当前 SDLC 阶段和进度
+- 用户无需执行 `/status` 即可一目了然
+- 提供视觉化进度条和任务摘要
+
+### 第十二层：用户命令 / Skills（按需）
 - `/status` — 随时查看完整状态，触发深度自检
 - `/checkpoint` — 手动保存状态快照
 - `/phase` — 确认和管理阶段
 - `/review` — 执行当前阶段的审查
+- Skills 升级：支持 `allowed-tools` 声明减少权限弹窗，支持自然语言意图自动触发
+
+### 第十三层：SubagentStop Hook — 子 Agent 输出质量门控（主动）
+- **子 Agent 完成时自动触发**（仅 P3-P5 自动驱动阶段）
+- 验证子 Agent 输出：是否符合 PRD、代码质量、无 PRD 外变更
+- 通过 `additionalContext` 注入验证要求，提醒主 Agent 检查结果
+- **防止低质量子 Agent 输出进入下一阶段**
+
+### 第十四层：PostToolUseFailure Hook — 失败恢复指导（主动）
+- **工具执行失败后自动触发**
+- 记录失败工具名称和当前阶段
+- 注入恢复建议：检查路径/命令、确认阶段允许性、检查权限配置
+- **防止工具失败后无指导的盲目重试**
+
+### 第十五层：PermissionRequest Hook — 阶段感知自动权限决策（被动）
+- **权限请求时自动触发**，根据当前 SDLC 阶段自动判断是否允许
+- 决策矩阵：P0-P2 禁止代码写入、P3+ 允许代码写入、P4+ 允许测试、P6 允许 Git 提交
+- Chrome 工具仅在 P2（UI 调研）和 P4（视觉测试）阶段允许
+- **不依赖 Claude 自觉性，由脚本自动做出权限决策**
+
+### 第十六层：SessionEnd Hook — 会话结束状态归档（主动）
+- **会话结束时自动触发**
+- 将当前阶段、任务、已修改文件归档到 `.claude/reviews/session-end-{timestamp}.md`
+- 为下次会话恢复提供额外参考信息
+- **确保会话间状态不丢失**
 
 ---
 
@@ -86,11 +141,11 @@ Claude Code 存在以下可能导致规范失效的场景：
 
 ```
 1. 当前在 P3 自动驱动中
-2. PreCompact hook 触发 → Claude 被指令保存状态到 .claude/project-state.md
+2. PreCompact agent 触发 → 自动用 Read/Edit 工具检查并更新 .claude/project-state.md
 3. Compaction 执行 → 对话历史被压缩
-4. CLAUDE.md 重新加载 → 「启动指令」重新执行
-5. Claude 读取 current_phase=P3 → 知道正在自动驱动的编码阶段
-6. 向用户简要报告恢复状态
+4. SessionStart hook 触发 → 确定性注入 "SDLC 状态恢复：阶段=P3，任务=..."
+5. CLAUDE.md + rules/ 重新加载 → 完整规范上下文恢复
+6. Claude 收到注入的上下文 → 立即知道当前阶段和任务
 7. 继续自动驱动流程（P3 编码 → P4 → P5 → P6）
 ```
 
