@@ -55,16 +55,17 @@ Claude Code 存在以下可能导致规范失效的场景：
 - 确保 modified_files 列表实时最新（状态存储在 .claude/project-state.md 中）
 - 为 compaction 后的恢复提供准确的文件清单
 
-### 第六层：Stop Hook — 回复后审查（主动，agent 类型）
+### 第六层：Stop Hook — 回复后自检（主动，轻量 command）
 - 每次回复完成后触发
-- **agent 类型**：可以实际调用 Read 工具读取 `.claude/project-state.md`，而非依赖对话上下文判断
-- 检查阶段合规性、状态最新性、工作完成度
-- 发现偏离时立即纠正
+- **command 类型**（轻量，不消耗主会话上下文）：shell 脚本读取 `.claude/project-state.md` 检查状态
+- P1/P2 提醒等待用户确认、P3-P5 提醒继续自动驱动、P6 提醒输出交付摘要
+- 通过 `additionalContext` 注入自检结果
 
-### 第七层：PreCompact Hook — 压缩前保存（主动，agent 类型）
-- **agent 类型**：可以实际调用 Read/Edit 工具检查并更新 `.claude/project-state.md`
-- 自动检查所有字段是否最新，缺失字段自动补充
-- 特别确保 key_context 摘要已写入，供压缩后恢复使用
+### 第七层：PreCompact Hook — 压缩前保存（主动，轻量 command）
+- **command 类型**（轻量，不消耗主会话上下文）：shell 脚本检查状态完整性
+- 检查 key_context、last_updated、modified_files 是否完整
+- 通过 `additionalContext` 注入紧急保存提醒，由 Claude 执行实际的 Edit 更新
+- **不启动子 Agent**，避免在上下文即将满时雪上加霜
 
 ### 第八层：SubagentStart Hook — 子 Agent 上下文注入（主动）
 - **子 Agent 启动时自动触发**

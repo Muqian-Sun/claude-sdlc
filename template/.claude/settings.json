@@ -63,9 +63,9 @@
       {
         "hooks": [
           {
-            "type": "agent",
-            "prompt": "你是 SDLC 合规检查 agent。检查 Claude 是否可以停止工作。\n\n请执行以下步骤：\n1. 用 Read 工具读取 .claude/project-state.md\n2. 检查 current_phase 值\n3. 如果是 P0 → 可以停止\n4. 如果是 P1/P2 → 检查是否在等待用户确认（可以停止）\n5. 如果是 P3-P5（自动驱动阶段）→ 检查当前阶段工作是否完成、/review 是否执行并通过\n6. 如果是 P6 → 检查是否已输出交付摘要\n7. 检查 modified_files 列表与实际操作是否一致\n8. 检查 last_updated 是否为最新\n\n回复 JSON：{\"ok\": true} 如果可以停止，或 {\"ok\": false, \"reason\": \"具体原因\"} 如果应继续工作。",
-            "timeout": 30
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-check.sh",
+            "timeout": 5
           }
         ]
       }
@@ -74,9 +74,9 @@
       {
         "hooks": [
           {
-            "type": "agent",
-            "prompt": "你是 SDLC 状态保存 agent。上下文即将被压缩，确保所有状态已保存。\n\n请执行以下步骤：\n1. 用 Read 工具读取 .claude/project-state.md\n2. 检查以下字段是否为最新值：current_phase, task_description, prd, modified_files, architecture_decisions, todo_items\n3. 特别检查 key_context 是否包含当前工作摘要（压缩后恢复需要）\n4. 如果有字段缺失或过时，用 Edit 工具更新 .claude/project-state.md\n\n回复 JSON：{\"ok\": true} 如果状态已完整保存，或 {\"ok\": false, \"reason\": \"需要更新的字段列表\"} 如果还需要保存。",
-            "timeout": 30
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-compact.sh",
+            "timeout": 5
           }
         ]
       }
