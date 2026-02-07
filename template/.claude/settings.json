@@ -36,7 +36,8 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "【SDLC 自检】读取 CLAUDE.md 确认 current_phase。检查：(1)本次操作匹配当前阶段？(2)符合 PRD？做了 PRD 外的事立即停止说明。(3)工具在允许列表内？(4)YAML 是否最新？不是则立即用 Edit 更新。(5)P2/P3 阶段：是否已用 Context7 MCP 查阅最新官方文档 + WebSearch 搜索最流行设计？未查阅则先执行调研再继续。【自动驱动】P1/P2 工作完成 → 展示产出物等用户确认，用户确认后自动审查推进；P3/P4/P5 工作完成 → 立即执行 /review 审查 → 通过则更新 current_phase 并开始下一阶段 → 未通过则自动修复重试（review_retry_count+1，≤3次，超过停下报告用户）；P6 审查通过 → 输出交付摘要报告。"
+            "prompt": "You are evaluating whether Claude should stop working. Context: $ARGUMENTS\n\nCheck the conversation transcript and determine:\n1. Is there an active SDLC phase (P1-P6) with remaining work?\n2. For P3/P4/P5 auto-drive phases: has the /review been executed and passed?\n3. Are there uncompleted PRD requirements?\n4. Has CLAUDE.md YAML state been updated after the latest changes?\n\nRespond with JSON: {\"ok\": true} if all tasks are complete and Claude can stop, or {\"ok\": false, \"reason\": \"SDLC self-check: [describe what still needs to be done, e.g. run /review, update CLAUDE.md YAML, continue to next phase, etc.]\"} if Claude should continue working.",
+            "timeout": 30
           }
         ]
       }
@@ -46,7 +47,8 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "【压缩前保存】用 Read 读取 CLAUDE.md YAML 块，用 Edit 确保所有字段最新：current_phase、task_description、prd、modified_files、architecture_decisions、todo_items。特别更新 key_context 为当前工作摘要（在做什么、下一步什么）。不更新则状态丢失。"
+            "prompt": "You are evaluating a conversation before context compaction. Context: $ARGUMENTS\n\nCheck if CLAUDE.md YAML state block has been updated with latest values for: current_phase, task_description, prd, modified_files, architecture_decisions, todo_items, key_context.\n\nRespond with JSON: {\"ok\": true} if state is saved, or {\"ok\": false, \"reason\": \"Before compaction: update CLAUDE.md YAML - save current_phase, task_description, modified_files, and write key_context summary of current work and next steps.\"}",
+            "timeout": 30
           }
         ]
       }

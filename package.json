@@ -1,6 +1,6 @@
 {
   "name": "claude-sdlc",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "让 Claude Code 严格按 SDLC 规范开发 — 一条命令安装",
   "bin": {
     "claude-sdlc": "./bin/cli.js"
