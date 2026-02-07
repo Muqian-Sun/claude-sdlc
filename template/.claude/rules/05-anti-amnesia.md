@@ -10,9 +10,9 @@ Claude Code 存在以下可能导致规范失效的场景：
 
 | 场景 | 风险 | 防御机制 |
 |------|------|---------|
-| 新会话启动 | Claude 不知道有规范 | CLAUDE.md + rules/ 自动加载 |
+| 新会话启动 | Claude 不知道有规范 | CLAUDE.md + rules/ + project-state.md 自动加载 |
 | 长对话漂移 | Claude 渐渐忘记规范 | Stop hook 每次回复后强制自检 |
-| Context Compaction | 早期对话被压缩丢弃 | PreCompact hook 保存状态 → CLAUDE.md 重新加载恢复 |
+| Context Compaction | 早期对话被压缩丢弃 | PreCompact hook 保存状态 → .claude/project-state.md 重新加载恢复 |
 | 用户催促跳过 | Claude 放弃规范直接执行 | Hooks 硬拦截违规操作 |
 | 新任务覆盖 | 上一任务状态残留 | 新任务检测 → 自动重置 |
 | Claude 自行判断不需要 | Claude 认为简单任务不需要走流程 | CLAUDE.md 明确"所有开发任务必须" |
@@ -23,6 +23,7 @@ Claude Code 存在以下可能导致规范失效的场景：
 
 ### 第一层：CLAUDE.md 启动指令（主动）
 - CLAUDE.md 在每次会话开始和 compaction 后自动加载
+- CLAUDE.md 通过 @import 引用 `.claude/project-state.md`，项目状态存储在该文件中
 - **「启动指令」要求 Claude 读到该文件时立即执行状态检查**
 - 这确保 Claude 不是被动接收规范，而是主动执行初始化
 - **这是最关键的防线**
@@ -42,20 +43,20 @@ Claude Code 存在以下可能导致规范失效的场景：
 - 这是**不依赖 Claude 自觉性的被动安全网**
 
 ### 第四层：PostToolUse Hook — 状态同步（主动）
-- 每次 Write/Edit 操作后，prompt hook 提醒 Claude 更新 CLAUDE.md
-- 确保 modified_files 列表实时最新
+- 每次 Write/Edit 操作后，prompt hook 提醒 Claude 更新 .claude/project-state.md
+- 确保 modified_files 列表实时最新（状态存储在 .claude/project-state.md 中）
 - 为 compaction 后的恢复提供准确的文件清单
 
 ### 第五层：Stop Hook — 回复后审查（主动）
 - 每次回复完成后触发
-- **强制 Claude 用 Read 工具重新读取 CLAUDE.md**，而非依赖记忆
+- **强制 Claude 用 Read 工具重新读取 .claude/project-state.md**，而非依赖记忆
 - 检查阶段合规性、状态最新性
 - 发现偏离时立即纠正
 
 ### 第六层：PreCompact Hook — 压缩前保存（主动）
 - **prompt 类型**，直接指令 Claude 在压缩前保存所有状态
-- 要求 Claude 用 Read 读取 CLAUDE.md 确认状态，用 Edit 更新缺失信息
-- 特别要求写入 key_context 摘要，确保恢复时有足够上下文
+- 要求 Claude 用 Read 读取 .claude/project-state.md 确认状态，用 Edit 更新缺失信息
+- 特别要求写入 key_context 摘要到 .claude/project-state.md，确保恢复时有足够上下文
 
 ### 第七层：用户命令（按需）
 - `/status` — 随时查看完整状态，触发深度自检
@@ -73,7 +74,7 @@ Claude Code 存在以下可能导致规范失效的场景：
 1. Claude Code 启动 → 自动加载 CLAUDE.md + rules/
 2. CLAUDE.md「启动指令」执行 → 检查 current_phase = P0
 3. Claude 识别到"实现"是开发请求 → 自动进入 P1
-4. 更新 CLAUDE.md: current_phase=P1, task_description="实现登录功能"
+4. 更新 .claude/project-state.md: current_phase=P1, task_description="实现登录功能"
 5. 开始需求分析 → 整理 PRD → 向用户展示 PRD 等待确认
 6. 用户确认 PRD → 自动审查 → 进入 P2 → 设计方案 → 向用户展示等待确认
 7. 用户确认设计 → 自动审查 → 进入自动驱动模式
@@ -85,7 +86,7 @@ Claude Code 存在以下可能导致规范失效的场景：
 
 ```
 1. 当前在 P3 自动驱动中
-2. PreCompact hook 触发 → Claude 被指令保存状态到 CLAUDE.md
+2. PreCompact hook 触发 → Claude 被指令保存状态到 .claude/project-state.md
 3. Compaction 执行 → 对话历史被压缩
 4. CLAUDE.md 重新加载 → 「启动指令」重新执行
 5. Claude 读取 current_phase=P3 → 知道正在自动驱动的编码阶段
@@ -98,7 +99,7 @@ Claude Code 存在以下可能导致规范失效的场景：
 ```
 1. Claude 调用 Write 工具写 .py 文件
 2. PreToolUse hook (check-phase-write.sh) 执行
-3. 读取 CLAUDE.md: current_phase=P1
+3. 读取 .claude/project-state.md: current_phase=P1
 4. P1 < P3 → 输出拦截信息，exit 2
 5. Claude 收到拦截信息 → 向用户说明不能在 P1 写代码
 6. 继续需求分析工作
@@ -153,13 +154,13 @@ Claude Code 存在以下可能导致规范失效的场景：
 **每次回复前执行（内部 4 步）：**
 
 ```
-1. 【阶段】我当前在哪个阶段？→ 检查 CLAUDE.md 的 current_phase
+1. 【阶段】我当前在哪个阶段？→ 检查 .claude/project-state.md 的 current_phase
 2. 【PRD】我接下来要做的事，对应 PRD 中的哪条需求？→ 如果对应不上，不做
 3. 【合规】我要执行的操作在当前阶段允许吗？→ 对照允许列表
-4. 【状态】CLAUDE.md 的状态是最新的吗？→ 如有变更需更新
+4. 【状态】.claude/project-state.md 的状态是最新的吗？→ 如有变更需更新
 ```
 
-**疑问时的行为：不猜测，用 Read 工具重新读取 CLAUDE.md。**
+**疑问时的行为：不猜测，用 Read 工具重新读取 .claude/project-state.md。**
 
 ---
 
@@ -173,7 +174,7 @@ Claude Code 存在以下可能导致规范失效的场景：
 - Stop hook 提醒时
 
 ```
-1. 用 Read 工具读取 CLAUDE.md「当前项目状态」YAML
+1. 用 Read 工具读取 .claude/project-state.md 的 YAML 状态
 2. 确认 current_phase 值
 3. 确认 task_description 值
 4. 回顾 modified_files 列表 — 是否有遗漏
@@ -188,7 +189,7 @@ Claude Code 存在以下可能导致规范失效的场景：
 ## 6. 异常恢复流程
 
 ### 自动恢复（优先）
-1. 用 Read 工具读取 CLAUDE.md 获取最新状态
+1. 用 Read 工具读取 .claude/project-state.md 获取最新状态
 2. 根据 modified_files 列表，用 Read 工具读取已修改的文件以恢复上下文
 3. 向用户报告恢复结果
 

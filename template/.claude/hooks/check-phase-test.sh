@@ -22,30 +22,18 @@ if [ -z "$COMMAND" ]; then
 fi
 
 # ==============================
-# 查找 CLAUDE.md 并读取阶段
+# 读取项目状态
 # ==============================
 
-find_claude_md() {
-  local dir="$PWD"
-  while [ "$dir" != "/" ]; do
-    if [ -f "$dir/CLAUDE.md" ]; then
-      echo "$dir/CLAUDE.md"
-      return 0
-    fi
-    dir=$(dirname "$dir")
-  done
-  return 1
-}
+STATE_FILE="${CLAUDE_PROJECT_DIR:-.}/.claude/project-state.md"
 
-CLAUDE_MD=$(find_claude_md 2>/dev/null) || true
-
-# 如果找不到 CLAUDE.md，默认放行（容错）
-if [ -z "$CLAUDE_MD" ]; then
+# 如果找不到状态文件，默认放行（容错）
+if [ ! -f "$STATE_FILE" ]; then
   exit 0
 fi
 
 # 读取当前阶段 — 兼容 macOS（不使用 grep -oP）
-CURRENT_PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$CLAUDE_MD" 2>/dev/null | head -1)
+CURRENT_PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$STATE_FILE" 2>/dev/null | head -1)
 
 if [ -z "$CURRENT_PHASE" ]; then
   exit 0

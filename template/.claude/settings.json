@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"decision\":\"block\",\"reason\":\"SDLC: File modified. Use Edit to update CLAUDE.md: append the modified file path to modified_files (if not already listed) and update last_updated. This is mandatory, do not skip.\"}'"
+            "command": "echo '{\"decision\":\"block\",\"reason\":\"SDLC: File modified. Use Edit to update .claude/project-state.md: append the modified file path to modified_files (if not already listed) and update last_updated. This is mandatory, do not skip.\"}'"
           }
         ]
       }
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "You are evaluating whether Claude should stop working. Context: $ARGUMENTS\n\nIMPORTANT: First check if stop_hook_active is true in the context above. If it is true, respond immediately with {\"ok\": true} to prevent infinite loops.\n\nOtherwise, check the conversation transcript and determine:\n1. Is there an active SDLC phase (P1-P6) with remaining work?\n2. For P3/P4/P5 auto-drive phases: has the /review been executed and passed?\n3. Are there uncompleted PRD requirements?\n4. Has CLAUDE.md YAML state been updated after the latest changes?\n\nRespond with JSON: {\"ok\": true} if all tasks are complete and Claude can stop, or {\"ok\": false, \"reason\": \"SDLC self-check: [describe what still needs to be done, e.g. run /review, update CLAUDE.md YAML, continue to next phase, etc.]\"} if Claude should continue working.",
+            "prompt": "You are evaluating whether Claude should stop working. Context: $ARGUMENTS\n\nIMPORTANT: First check if stop_hook_active is true in the context above. If it is true, respond immediately with {\"ok\": true} to prevent infinite loops.\n\nOtherwise, check the conversation transcript and determine:\n1. Is there an active SDLC phase (P1-P6) with remaining work?\n2. For P3/P4/P5 auto-drive phases: has the /review been executed and passed?\n3. Are there uncompleted PRD requirements?\n4. Has .claude/project-state.md YAML state been updated after the latest changes?\n\nRespond with JSON: {\"ok\": true} if all tasks are complete and Claude can stop, or {\"ok\": false, \"reason\": \"SDLC self-check: [describe what still needs to be done, e.g. run /review, update .claude/project-state.md YAML, continue to next phase, etc.]\"} if Claude should continue working.",
             "timeout": 30
           }
         ]
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "You are evaluating a conversation before context compaction. Context: $ARGUMENTS\n\nCheck if CLAUDE.md YAML state block has been updated with latest values for: current_phase, task_description, prd, modified_files, architecture_decisions, todo_items, key_context.\n\nRespond with JSON: {\"ok\": true} if state is saved, or {\"ok\": false, \"reason\": \"Before compaction: update CLAUDE.md YAML - save current_phase, task_description, modified_files, and write key_context summary of current work and next steps.\"}",
+            "prompt": "You are evaluating a conversation before context compaction. Context: $ARGUMENTS\n\nCheck if .claude/project-state.md YAML state block has been updated with latest values for: current_phase, task_description, prd, modified_files, architecture_decisions, todo_items, key_context.\n\nRespond with JSON: {\"ok\": true} if state is saved, or {\"ok\": false, \"reason\": \"Before compaction: update .claude/project-state.md YAML - save current_phase, task_description, modified_files, and write key_context summary of current work and next steps.\"}",
             "timeout": 30
           }
         ]

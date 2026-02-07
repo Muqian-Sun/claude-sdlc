@@ -35,7 +35,7 @@
 
 ### 1. 自动识别当前阶段
 
-读取 CLAUDE.md 中的 `current_phase`，根据阶段选择对应的审查清单。
+读取 .claude/project-state.md 中的 `current_phase`，根据阶段选择对应的审查清单。
 
 ### 2. 确定审查范围
 
@@ -57,7 +57,7 @@
 - [ ] **影响分析**：受影响的文件和模块是否已识别完整
 - [ ] **风险识别**：技术风险和业务风险是否已列出
 - [ ] **用户已确认**：PRD 是否已经用户明确确认
-- [ ] **已写入 CLAUDE.md**：PRD 是否已写入 `prd` 字段
+- [ ] **已写入 .claude/project-state.md**：PRD 是否已写入 `prd` 字段
 
 ### 输出格式
 ```
@@ -141,7 +141,7 @@
 ## P3 编码实现 — 代码审查
 
 ### 审查范围
-- 审查 CLAUDE.md 中 `modified_files` 列表里的所有文件
+- 审查 .claude/project-state.md 中 `modified_files` 列表里的所有文件
 - 如指定了文件路径，仅审查该文件
 
 ### 工具执行（P3 审查前必须运行）

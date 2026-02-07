@@ -9,8 +9,8 @@
 ## 执行逻辑
 
 1. **收集当前状态信息**：
-   - 读取 CLAUDE.md 中的 `current_phase`
-   - 读取 CLAUDE.md 中的 `task_description`
+   - 读取 .claude/project-state.md 中的 `current_phase`
+   - 读取 .claude/project-state.md 中的 `task_description`
    - 执行 `git status`（如果是 git 仓库）获取文件变更状态
    - 执行 `git diff --stat`（如果是 git 仓库）获取变更统计
 
@@ -36,7 +36,7 @@
    ========================
    ```
 
-3. **更新 CLAUDE.md**：
+3. **更新 .claude/project-state.md**：
    - 确保 `modified_files` 列表是最新的
    - 确保 `todo_items` 列表是最新的
    - 更新 `last_updated` 时间戳
@@ -46,7 +46,7 @@
    ```
    ✅ 检查点已保存。
 
-   如果后续发生上下文压缩（compaction），可以从 CLAUDE.md 恢复以下状态：
+   如果后续发生上下文压缩（compaction），可以从 .claude/project-state.md 恢复以下状态：
    - 阶段：{阶段}
    - 任务：{任务描述}
    - 已修改 {n} 个文件

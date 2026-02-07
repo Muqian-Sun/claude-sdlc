@@ -11,7 +11,7 @@
 根据参数执行以下操作：
 
 ### 无参数 或 `status`
-1. 读取 CLAUDE.md 中的 `current_phase` 值
+1. 读取 .claude/project-state.md 中的 `current_phase` 值
 2. 输出当前阶段信息：
    - 阶段编号和名称
    - 该阶段允许的操作
@@ -52,9 +52,9 @@ Step 3: 审查通过？
    - 自动执行当前阶段对应的 `/review`
    - 输出审查报告
 5. **审查通过**：
-   - 将 `current_phase` 更新为下一阶段
-   - 更新 `phase_history` 记录（含审查结果摘要）
-   - 更新 `last_updated` 时间戳
+   - 将 .claude/project-state.md 的 `current_phase` 更新为下一阶段
+   - 更新 .claude/project-state.md 的 `phase_history` 记录（含审查结果摘要）
+   - 更新 .claude/project-state.md 的 `last_updated` 时间戳
    - **P1→P2、P2→P3**：输出新阶段的入口信息（P2→P3 时提示"进入自动驱动模式"）
    - **P3→P4、P4→P5、P5→P6**：不输出冗余信息，立即开始下一阶段工作
    - **P6 完成**：输出交付摘要报告
@@ -67,9 +67,9 @@ Step 3: 审查通过？
 1. 读取当前阶段
 2. 如果已是 P0/P1，提示无法继续回退
 3. 要求提供回退原因
-4. 更新 `current_phase` 为上一阶段
-5. 更新 `phase_history` 记录（含回退原因）
-6. 更新 `last_updated` 时间戳
+4. 更新 .claude/project-state.md 的 `current_phase` 为上一阶段
+5. 更新 .claude/project-state.md 的 `phase_history` 记录（含回退原因）
+6. 更新 .claude/project-state.md 的 `last_updated` 时间戳
 7. 输出回退后的阶段信息
 8. 注意：回退后上一阶段的审查状态重置，再次推进时需重新审查
 

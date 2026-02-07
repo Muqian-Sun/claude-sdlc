@@ -23,43 +23,29 @@ if [ -z "$FILE_PATH" ]; then
 fi
 
 # 文档/配置类文件扩展名 — 任何阶段都允许写入
-# 注意：.html 和 .css 是代码文件（Web 项目），不在白名单中
 DOC_EXTENSIONS='\.(md|txt|json|yaml|yml|toml|ini|cfg|conf|gitignore|editorconfig|prettierrc|eslintrc|csv|xml|svg|lock|log|env|env\..*)$'
 
 if echo "$FILE_PATH" | grep -qiE "$DOC_EXTENSIONS"; then
   exit 0
 fi
 
-# 查找项目根目录的 CLAUDE.md
-find_claude_md() {
-  local dir="$PWD"
-  while [ "$dir" != "/" ]; do
-    if [ -f "$dir/CLAUDE.md" ]; then
-      echo "$dir/CLAUDE.md"
-      return 0
-    fi
-    dir=$(dirname "$dir")
-  done
-  return 1
-}
+# 读取项目状态文件
+STATE_FILE="${CLAUDE_PROJECT_DIR:-.}/.claude/project-state.md"
 
-CLAUDE_MD=$(find_claude_md 2>/dev/null) || true
-
-# 如果找不到 CLAUDE.md，默认放行（容错）
-if [ -z "$CLAUDE_MD" ]; then
+# 如果找不到状态文件，默认放行（容错）
+if [ ! -f "$STATE_FILE" ]; then
   exit 0
 fi
 
-# 读取当前阶段 — 兼容 macOS (BSD grep) 和 Linux (GNU grep)
-# 不使用 grep -oP（macOS 不支持 Perl 正则）
-CURRENT_PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$CLAUDE_MD" 2>/dev/null | head -1)
+# 读取当前阶段 — 兼容 macOS (BSD sed)
+CURRENT_PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$STATE_FILE" 2>/dev/null | head -1)
 
 # 如果无法确定阶段，默认放行（容错）
 if [ -z "$CURRENT_PHASE" ]; then
   exit 0
 fi
 
-# 提取阶段编号（P0→0, P1→1, ...）— 兼容 macOS
+# 提取阶段编号（P0→0, P1→1, ...）
 PHASE_NUM=$(echo "$CURRENT_PHASE" | sed 's/[^0-9]//g' 2>/dev/null)
 
 if [ -z "$PHASE_NUM" ]; then

@@ -10,7 +10,7 @@
 
 执行深度自检并生成全面的项目状态报告：
 
-### 1. 读取 CLAUDE.md 状态
+### 1. 读取 .claude/project-state.md 状态
 - `current_phase` — 当前阶段
 - `task_description` — 任务描述
 - `started_at` / `last_updated` — 时间信息
@@ -74,7 +74,7 @@
 ```
 
 ### 4. 同步更新
-- 如果发现 CLAUDE.md 中的信息不是最新，同步更新
+- 如果发现 .claude/project-state.md 中的信息不是最新，同步更新
 - 更新 `last_updated` 时间戳
 
 ---

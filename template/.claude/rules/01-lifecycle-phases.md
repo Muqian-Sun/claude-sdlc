@@ -33,7 +33,7 @@
 
 ### PRD 确认流程
 1. Claude 整理 PRD 初稿后，**必须向用户展示完整的需求清单**
-2. 用户确认后，将 PRD 写入 CLAUDE.md 的 `prd` 字段
+2. 用户确认后，将 PRD 写入 .claude/project-state.md 的 `prd` 字段
 3. **PRD 一旦写入即锁定**，后续阶段以此为唯一依据
 4. 如需修改 PRD，必须回到 P1 重新获得用户确认
 
@@ -46,11 +46,11 @@
 - [ ] 技术可行性 — 在当前技术栈下可实现
 - [ ] 影响分析 — 受影响的文件和模块已识别
 - [ ] **用户已确认** — PRD 经用户明确确认
-- [ ] **PRD 已写入 CLAUDE.md** — `prd` 字段已填写
+- [ ] **PRD 已写入 .claude/project-state.md** — `prd` 字段已填写
 
 ### 退出条件
 - PRD 已整理完成并经用户确认
-- PRD 已写入 CLAUDE.md 的 `prd` 字段
+- PRD 已写入 .claude/project-state.md 的 `prd` 字段
 - 影响范围已明确
 - **需求审查已通过**（`/review`）
 
@@ -69,7 +69,7 @@
 
 ### 入口条件
 - P1 需求分析已完成（含需求审查通过）
-- PRD 已获用户确认并写入 CLAUDE.md
+- PRD 已获用户确认并写入 .claude/project-state.md
 
 ### 阶段活动
 - **【最新技术与设计调研 — 必须首先执行】**：
@@ -145,7 +145,7 @@
   3. 确保使用当前推荐的 API，不使用已废弃（deprecated）的方法或过时写法
 - **严格按 P2 设计方案编写代码，不添加 PRD 之外的功能**
 - 遵循编码规范（见 02-coding-standards.md）
-- 每完成一个逻辑单元，更新 CLAUDE.md 中的 modified_files
+- 每完成一个逻辑单元，更新 .claude/project-state.md 中的 modified_files
 - 记录实现中的关键决策
 - **如发现 PRD 有遗漏或设计需调整，停止编码，回退到 P1/P2 与用户确认**
 - **多 Agent 并行编码**（如有独立模块）：按设计方案拆分独立模块，用 Task 工具并行派发子 Agent 编码（见 07-parallel-agents.md）
@@ -159,7 +159,7 @@
 ### 必需产出物
 - [ ] 功能代码实现（**仅限 PRD 范围**）
 - [ ] 代码符合编码规范
-- [ ] CLAUDE.md 中 modified_files 已更新
+- [ ] .claude/project-state.md 中 modified_files 已更新
 - [ ] 关键实现决策已记录
 
 ### 阶段审查（代码审查）
