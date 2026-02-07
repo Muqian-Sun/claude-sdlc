@@ -1,54 +1,79 @@
-# SDLC Enforcer for Claude Code
+<p align="center">
+  <img src="logo-banner.svg" alt="claude-sdlc" width="700"/>
+</p>
 
-**让 Claude Code 严格按照软件开发生命周期（SDLC）规范进行开发。**
+<p align="center">
+  <strong>让 Claude Code 严格按 SDLC 规范开发 — 一条命令安装，零配置开箱即用。</strong>
+</p>
 
-自动加载、运行时拦截、抗上下文压缩——零配置，开箱即用。
+<p align="center">
+  <a href="https://www.npmjs.com/package/claude-sdlc"><img src="https://img.shields.io/npm/v/claude-sdlc.svg" alt="npm version"/></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/npm/l/claude-sdlc.svg" alt="license"/></a>
+  <a href="https://www.npmjs.com/package/claude-sdlc"><img src="https://img.shields.io/npm/dm/claude-sdlc.svg" alt="downloads"/></a>
+</p>
+
+---
+
+## 一条命令安装
+
+```bash
+npx claude-sdlc
+```
+
+安装到指定目录：
+
+```bash
+npx claude-sdlc ./my-project
+```
+
+安装完成后，在项目目录启动 `claude` 即可自动加载全部规范。**每个项目只需安装一次。**
+
+一键卸载：
+
+```bash
+npx claude-sdlc uninstall
+```
 
 ---
 
 ## 解决什么问题
 
-| 问题 | 解决方案 |
+| 痛点 | 解决方案 |
 |------|---------|
-| Claude Code 不遵循开发流程，直接写代码 | SDLC 六阶段强制流程（需求→设计→编码→测试→审查→交付） |
-| 规范需要手动每次提醒 | CLAUDE.md + rules 自动加载，Hooks 运行时拦截 |
-| 长对话后 Claude 忘记规范（context compaction） | 五层防御机制，CLAUDE.md 活文档自动恢复 |
-
-## 核心特性
-
-- **六阶段 SDLC 流程**：P1 需求分析 → P2 系统设计 → P3 编码实现 → P4 测试验证 → P5 集成审查 → P6 部署交付
-- **每阶段独立审查**：每个阶段都有对应的专项 Review，审查通过才能推进，错误越早发现修复成本越低
-- **自动加载**：CLAUDE.md 和 rules/ 在 Claude Code 启动时自动加载
-- **运行时拦截**：Hooks 自动拦截当前阶段不允许的操作（如 P1 阶段写代码）
-- **抗压缩**：Context compaction 后自动从 CLAUDE.md 恢复项目状态
-- **斜杠命令**：`/phase`、`/status`、`/checkpoint`、`/review` 管理开发流程
+| Claude 不走流程，直接写代码 | 六阶段强制流程：需求 → 设计 → 编码 → 测试 → 审查 → 交付 |
+| 需要反复输入指令推进 | **自动驱动**：确认需求和设计后，编码到交付全自动 |
+| 规范需要每次手动提醒 | CLAUDE.md + rules/ 自动加载，Hooks 运行时拦截 |
+| Claude 自行加减功能 | **PRD 驱动**：严格按需求清单，每行代码对应 PRD |
+| 长对话后遗忘规范 | 七层防御 + 抗压缩机制，compaction 后自动恢复 |
+| CLAUDE.md 过长导致遵循率下降 | 精简到 ~100 行，详细规则拆到 rules/ 自动加载 |
 
 ---
 
-## 快速安装
+## 工作流程
 
-### 方式 1：克隆后安装
-
-```bash
-git clone https://github.com/<your-username>/sdlc-enforcer.git
-cd sdlc-enforcer
-./install.sh /path/to/your-project
+```
+你说"帮我实现XX"
+  ↓
+P1 需求分析 → 整理 PRD →【你确认】
+  ↓
+P2 系统设计 → 设计方案 →【你确认】
+  ↓ 以下全自动
+P3 编码 → P4 测试 → P5 集成审查 → P6 交付 → 完成报告
 ```
 
-### 方式 2：安装到当前目录
+**用户只需两次确认（PRD + 设计），其余全自动。** 审查失败时自动修复重试，最多 3 次后才请求帮助。
 
-```bash
-git clone https://github.com/<your-username>/sdlc-enforcer.git
-cd sdlc-enforcer
-./install.sh .
-```
+---
 
-### 前置依赖
+## 核心特性
 
-- **jq**：Hook 脚本需要 jq 解析 JSON
-  - macOS: `brew install jq`
-  - Ubuntu: `sudo apt-get install jq`
-  - 如未安装 jq，Hooks 会自动降级为放行（不会阻塞工作）
+- **自动驱动** — P3→P6 全自动，用户坐等结果
+- **PRD 驱动** — 每行代码对应 PRD 需求，禁止添加/减少
+- **运行时拦截** — Hooks 自动拦截违规操作（P3 前写代码、P4 前跑测试、P6 前 git）
+- **自动审查** — 每阶段通过 `/review` 审查才推进，集成真实工具链（Lint/Typecheck/Coverage）
+- **抗压缩** — PreCompact Hook 保存状态，compaction 后自动恢复继续
+- **多 Agent 并行** — P3/P4/P5 阶段支持 Task 工具并行开发
+- **斜杠命令** — `/phase`、`/status`、`/checkpoint`、`/review`
 
 ---
 
@@ -56,185 +81,97 @@ cd sdlc-enforcer
 
 ```
 your-project/
-├── CLAUDE.md                          # 核心控制文件（自动加载）
+├── CLAUDE.md                       # 核心控制文件（~100行）
 └── .claude/
-    ├── settings.json                  # Hooks 配置
-    ├── rules/
-    │   ├── 01-lifecycle-phases.md     # SDLC 阶段定义
-    │   ├── 02-coding-standards.md     # 编码规范
-    │   ├── 03-testing-standards.md    # 测试标准
-    │   ├── 04-git-workflow.md         # Git 工作流
-    │   └── 05-anti-amnesia.md         # 反遗忘机制
-    ├── hooks/
-    │   ├── check-phase-write.sh       # 拦截非法代码写入
-    │   └── check-phase-test.sh        # 拦截非法测试执行
-    └── commands/
-        ├── phase.md                   # /phase 命令
-        ├── checkpoint.md              # /checkpoint 命令
-        ├── status.md                  # /status 命令
-        └── review.md                  # /review 命令
+    ├── settings.json               # Hooks 配置
+    ├── rules/                      # 7 个规则文件（自动加载）
+    │   ├── 01-lifecycle-phases.md
+    │   ├── 02-coding-standards.md
+    │   ├── 03-testing-standards.md
+    │   ├── 04-git-workflow.md
+    │   ├── 05-anti-amnesia.md
+    │   ├── 06-review-tools.md
+    │   └── 07-parallel-agents.md
+    ├── hooks/                      # 2 个拦截脚本
+    │   ├── check-phase-write.sh
+    │   └── check-phase-test.sh
+    ├── commands/                   # 4 个斜杠命令
+    │   ├── phase.md
+    │   ├── checkpoint.md
+    │   ├── status.md
+    │   └── review.md
+    └── reviews/                    # 审查报告持久化
 ```
 
 ---
 
-## 使用指南
+## 七层防御机制
 
-### 开始开发
+| 层 | 机制 | 作用 |
+|----|------|------|
+| 1 | CLAUDE.md 启动指令 | 自动状态检查和初始化 |
+| 2 | rules/ 规则文件 | 详细规范自动加载 |
+| 3 | PreToolUse Hooks | 硬拦截违规操作，不依赖 Claude 自觉 |
+| 4 | PostToolUse Hook | 文件修改后同步状态 |
+| 5 | Stop Hook | 每次回复后自检 + 自动驱动 |
+| 6 | PreCompact Hook | 压缩前保存状态 |
+| 7 | 用户命令 | /status、/checkpoint、/phase、/review |
 
-在目标项目目录启动 Claude Code：
+---
+
+## 其他安装方式
+
+### 全局安装
 
 ```bash
-cd your-project
-claude
+npm install -g claude-sdlc
+claude-sdlc
 ```
 
-Claude 会自动加载 SDLC 规范。**当你提出开发任务时（如"帮我实现..."），Claude 会自动进入 P1（需求分析），无需手动操作。**
+### Shell 脚本安装（无需 Node.js）
 
-### 阶段管理
-
-```
-/phase           # 查看当前阶段和退出条件
-/phase next      # 推进到下一阶段（自动检查退出条件）
-/phase back      # 回退到上一阶段
+```bash
+git clone https://github.com/muqian/claude-sdlc.git
+cd claude-sdlc
+./install.sh /path/to/your-project
 ```
 
-### 项目状态
+### 前置依赖
 
-```
-/status          # 查看全面的项目状态报告
-/checkpoint      # 保存状态快照（建议长对话时定期使用）
-```
-
-### 阶段审查
-
-```
-/review                    # 执行当前阶段的专项审查
-/review src/auth/login.ts  # 审查指定文件（P3+ 阶段）
-```
-
-`/review` 会根据当前阶段自动选择审查类型。`/phase next` 会自动触发审查。
-
-### SDLC 六阶段说明
-
-| 阶段 | 名称 | 核心活动 | 阶段审查 |
-|------|------|---------|---------|
-| **P1** | 需求分析 | 理解需求、分析代码库、识别范围 | 需求审查（完整性、明确性、可行性） |
-| **P2** | 系统设计 | 架构设计、技术选型、实现规划 | 设计审查（架构合理性、需求覆盖） |
-| **P3** | 编码实现 | 编写代码、遵循编码规范 | 代码审查（质量、安全、可维护性） |
-| **P4** | 测试验证 | 编写和执行测试 | 测试审查（覆盖度、质量、结果） |
-| **P5** | 集成审查 | 跨模块全局审查、需求追溯 | 集成审查（全局一致性、完整性追溯） |
-| **P6** | 部署交付 | Git 提交、创建 PR | 交付审查（Commit 规范、文档） |
+- **Node.js >= 16**（npx/npm 方式）
+- **jq**（可选）：Hook 脚本优先用 jq 解析 JSON，未安装时自动降级为 sed
 
 ---
 
-## 自动执行 — 无需人为干预
+## 自定义
 
-本系统的设计目标：**Claude 在任何情况下都能自己读取规范、按规范执行**，用户不需要提醒。
-
-### 七层防御机制
-
-| 层 | 机制 | 类型 | 作用 |
-|----|------|------|------|
-| 1 | CLAUDE.md 启动指令 | 主动 | 每次加载时自动执行状态检查和初始化 |
-| 2 | rules/ 规则文件 | 主动 | 详细规范自动加载，compaction 后重新加载 |
-| 3 | PreToolUse Hooks | 被动 | 硬拦截违规操作（写代码/测试/git），不依赖 Claude 自觉 |
-| 4 | PostToolUse Hook | 主动 | 每次文件修改后提醒更新 CLAUDE.md 状态 |
-| 5 | Stop Hook | 主动 | 每次回复后强制重读 CLAUDE.md 并自检合规性 |
-| 6 | PreCompact Hook | 主动 | 压缩前强制保存所有状态到 CLAUDE.md |
-| 7 | 用户命令 | 按需 | /status、/checkpoint、/phase、/review |
-
-### 自动化流程
-
-```
-用户说"帮我实现X"
-     ↓
-CLAUDE.md 启动指令自动识别 → 进入 P1 → 开始需求分析
-     ↓
-每次回复 → Stop Hook 强制自检
-每次工具调用 → PreToolUse Hook 拦截违规
-每次文件修改 → PostToolUse Hook 同步状态
-     ↓
-Context Compaction 发生
-     ↓
-PreCompact Hook → 保存状态到 CLAUDE.md
-     ↓
-CLAUDE.md + rules/ 重新加载 → 启动指令重新执行 → 自动恢复
-```
-
----
-
-## 自定义配置
-
-### 修改阶段定义
-
-编辑 `.claude/rules/01-lifecycle-phases.md`，可以修改每个阶段的入口/退出条件。
-
-### 修改编码规范
-
-编辑 `.claude/rules/02-coding-standards.md`，根据团队习惯调整命名、格式等规范。
-
-### 添加新的规则文件
-
-在 `.claude/rules/` 目录下添加新的 `.md` 文件，会自动被 Claude Code 加载。
-
-### 调整 Hook 拦截规则
-
-编辑 `.claude/hooks/` 下的脚本，修改文件类型白名单或命令模式匹配。
-
-### 添加新的斜杠命令
-
-在 `.claude/commands/` 下添加新的 `.md` 文件即可注册新命令。
-
----
-
-## 工作原理
-
-```
-Claude Code 启动
-     ↓
-自动加载 CLAUDE.md → 了解 SDLC 规范 + 当前项目状态
-     ↓
-自动加载 .claude/rules/*.md → 获取详细规范
-     ↓
-自动注册 .claude/settings.json 中的 Hooks
-     ↓
-自动注册 .claude/commands/*.md 为斜杠命令
-     ↓
-开始工作（受规范约束）
-     │
-     ├── 每次工具调用 → PreToolUse Hook 检查阶段合规性
-     ├── 每次回复后 → Stop Hook 检查整体合规性
-     └── Context Compaction 前 → PreCompact Hook 提醒保存状态
-```
+| 需求 | 编辑 |
+|------|------|
+| 修改阶段定义 | `.claude/rules/01-lifecycle-phases.md` |
+| 修改编码规范 | `.claude/rules/02-coding-standards.md` |
+| 添加新规则 | `.claude/rules/` 下新增 `.md` 文件 |
+| 调整拦截规则 | `.claude/hooks/` 下的脚本 |
+| 添加斜杠命令 | `.claude/commands/` 下新增 `.md` 文件 |
 
 ---
 
 ## 常见问题
 
-### Hook 报错"jq: command not found"
+**已有 CLAUDE.md 会被覆盖吗？**
+会直接覆盖为最新版本。
 
-安装 jq：`brew install jq`（macOS）或 `sudo apt-get install jq`（Ubuntu）。
+**已有 settings.json 怎么办？**
+自动智能合并 hooks 配置（去重），保留原有配置不丢失。
 
-### 已有 CLAUDE.md 会被覆盖吗？
+**可以跳过阶段吗？**
+可以，Claude 会先说明风险，确认后记录跳过原因并推进。
 
-不会。安装脚本会先将已有的 CLAUDE.md 备份为 `CLAUDE.md.bak.<时间戳>`。
-
-### 已有 settings.json 会被覆盖吗？
-
-如果安装了 jq，脚本会智能合并 hooks 配置。否则会备份原文件后覆盖。
-
-### 可以跳过某个阶段吗？
-
-可以。使用 `/phase next` 时如果退出条件未满足，Claude 会询问是否强制推进。强制推进时会记录跳过的条件。
-
-### 如何卸载？
-
-删除以下文件即可：
+**如何卸载？**
 ```bash
-rm CLAUDE.md
-rm -rf .claude/rules/ .claude/hooks/ .claude/commands/
-# 如需要，手动从 .claude/settings.json 中移除 SDLC 相关的 hooks
+npx claude-sdlc uninstall              # 卸载当前目录
+npx claude-sdlc uninstall ./my-project # 卸载指定目录
 ```
+自动清除 CLAUDE.md、.claude/rules/、hooks/、commands/、reviews/、settings.json 中的 hooks 配置。
 
 ---
 

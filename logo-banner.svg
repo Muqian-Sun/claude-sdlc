@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" fill="none">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9"/>
+      <stop offset="100%" style="stop-color:#6366F1"/>
+    </linearGradient>
+    <linearGradient id="innerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E293B"/>
+      <stop offset="100%" style="stop-color:#0F172A"/>
+    </linearGradient>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22D3EE"/>
+      <stop offset="50%" style="stop-color:#818CF8"/>
+      <stop offset="100%" style="stop-color:#E879F9"/>
+    </linearGradient>
+    <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#34D399"/>
+      <stop offset="100%" style="stop-color:#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#E2E8F0"/>
+      <stop offset="100%" style="stop-color:#CBD5E1"/>
+    </linearGradient>
+    <linearGradient id="nameGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#22D3EE"/>
+      <stop offset="40%" style="stop-color:#818CF8"/>
+      <stop offset="100%" style="stop-color:#E879F9"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#818CF8" opacity="0.7"/>
+    </marker>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="800" height="220" rx="16" fill="#0F172A"/>
+  <rect width="800" height="220" rx="16" fill="url(#shieldGrad)" opacity="0.05"/>
+
+  <!-- === 左侧盾牌 Logo === -->
+  <g transform="translate(60, 15) scale(0.4)">
+    <!-- 盾牌外形 -->
+    <path d="M256 42 L440 120 L440 280 Q440 380 256 472 Q72 380 72 280 L72 120 Z"
+          fill="url(#shieldGrad)" opacity="0.9"/>
+    <!-- 盾牌内部 -->
+    <path d="M256 62 L422 132 L422 276 Q422 368 256 452 Q90 368 90 276 L90 132 Z"
+          fill="url(#innerGrad)"/>
+    <!-- 循环环 -->
+    <circle cx="256" cy="248" r="108" stroke="url(#ringGrad)" stroke-width="3.5"
+            fill="none" opacity="0.5" filter="url(#softGlow)"/>
+    <!-- P1-P6 节点 -->
+    <circle cx="256" cy="140" r="20" fill="#0F172A" stroke="#22D3EE" stroke-width="2.5"/>
+    <text x="256" y="145" text-anchor="middle" fill="#22D3EE"
+          font-family="SF Mono, Menlo, monospace" font-size="13" font-weight="700">P1</text>
+    <circle cx="350" cy="194" r="20" fill="#0F172A" stroke="#60A5FA" stroke-width="2.5"/>
+    <text x="350" y="199" text-anchor="middle" fill="#60A5FA"
+          font-family="SF Mono, Menlo, monospace" font-size="13" font-weight="700">P2</text>
+    <circle cx="350" cy="302" r="20" fill="#0F172A" stroke="#818CF8" stroke-width="2.5"/>
+    <text x="350" y="307" text-anchor="middle" fill="#818CF8"
+          font-family="SF Mono, Menlo, monospace" font-size="13" font-weight="700">P3</text>
+    <circle cx="256" cy="356" r="20" fill="#0F172A" stroke="#A78BFA" stroke-width="2.5"/>
+    <text x="256" y="361" text-anchor="middle" fill="#A78BFA"
+          font-family="SF Mono, Menlo, monospace" font-size="13" font-weight="700">P4</text>
+    <circle cx="162" cy="302" r="20" fill="#0F172A" stroke="#C084FC" stroke-width="2.5"/>
+    <text x="162" y="307" text-anchor="middle" fill="#C084FC"
+          font-family="SF Mono, Menlo, monospace" font-size="13" font-weight="700">P5</text>
+    <circle cx="162" cy="194" r="20" fill="#0F172A" stroke="#E879F9" stroke-width="2.5"/>
+    <text x="162" y="199" text-anchor="middle" fill="#E879F9"
+          font-family="SF Mono, Menlo, monospace" font-size="13" font-weight="700">P6</text>
+    <!-- 箭头 -->
+    <path d="M275 147 Q310 155 340 178" stroke="#38BDF8" stroke-width="2" fill="none" marker-end="url(#arrowHead)"/>
+    <path d="M356 216 Q360 255 356 282" stroke="#6366F1" stroke-width="2" fill="none" marker-end="url(#arrowHead)"/>
+    <path d="M335 318 Q305 340 278 350" stroke="#818CF8" stroke-width="2" fill="none" marker-end="url(#arrowHead)"/>
+    <path d="M237 362 Q200 355 178 322" stroke="#A78BFA" stroke-width="2" fill="none" marker-end="url(#arrowHead)"/>
+    <path d="M158 280 Q155 240 158 216" stroke="#C084FC" stroke-width="2" fill="none" marker-end="url(#arrowHead)"/>
+    <path d="M178 178 Q210 155 237 147" stroke="#E879F9" stroke-width="2" fill="none" marker-end="url(#arrowHead)"/>
+    <!-- 中心对勾 -->
+    <path d="M232 248 L250 268 L284 228" stroke="url(#checkGrad)" stroke-width="6"
+          stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#glow)"/>
+  </g>
+
+  <!-- === 右侧文字 === -->
+  <!-- 名称 -->
+  <text x="290" y="95" fill="url(#nameGrad)"
+        font-family="SF Pro Display, -apple-system, Helvetica, sans-serif"
+        font-size="48" font-weight="800" letter-spacing="-1">claude-sdlc</text>
+
+  <!-- 副标题 -->
+  <text x="293" y="130" fill="#94A3B8"
+        font-family="SF Pro Text, -apple-system, Helvetica, sans-serif"
+        font-size="18" font-weight="400">SDLC Enforcer for Claude Code</text>
+
+  <!-- 标签 -->
+  <!-- 标签 1 -->
+  <rect x="290" y="150" width="80" height="26" rx="13" fill="#22D3EE" opacity="0.15"/>
+  <text x="330" y="168" text-anchor="middle" fill="#22D3EE"
+        font-family="SF Mono, Menlo, monospace" font-size="12" font-weight="600">6 Phases</text>
+  <!-- 标签 2 -->
+  <rect x="380" y="150" width="98" height="26" rx="13" fill="#818CF8" opacity="0.15"/>
+  <text x="429" y="168" text-anchor="middle" fill="#818CF8"
+        font-family="SF Mono, Menlo, monospace" font-size="12" font-weight="600">Auto-Drive</text>
+  <!-- 标签 3 -->
+  <rect x="488" y="150" width="100" height="26" rx="13" fill="#E879F9" opacity="0.15"/>
+  <text x="538" y="168" text-anchor="middle" fill="#E879F9"
+        font-family="SF Mono, Menlo, monospace" font-size="12" font-weight="600">PRD-Driven</text>
+  <!-- 标签 4 -->
+  <rect x="598" y="150" width="80" height="26" rx="13" fill="#34D399" opacity="0.15"/>
+  <text x="638" y="168" text-anchor="middle" fill="#34D399"
+        font-family="SF Mono, Menlo, monospace" font-size="12" font-weight="600">7 Guards</text>
+
+  <!-- 作者 -->
+  <text x="293" y="203" fill="#475569"
+        font-family="SF Pro Text, -apple-system, Helvetica, sans-serif"
+        font-size="13">by 沐谦</text>
+</svg>

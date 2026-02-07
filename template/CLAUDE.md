@@ -1,198 +1,117 @@
-# SDLC 软件工程开发规范（自动加载 · 抗压缩）
+# SDLC 开发规范（自动加载 · 抗压缩）
 
-> **本文件由 sdlc-enforcer 自动安装。Claude Code 每次启动和 Context Compaction 后自动加载本文件。**
+> 详细规则见 `.claude/rules/`（自动加载）。可用命令：`/phase`、`/status`、`/checkpoint`、`/review`。
 
----
+## 启动指令（加载时立即执行）
 
-## 零、启动指令（每次加载本文件时立即执行）
+1. 读取下方 `current_phase` 值
+2. **P1-P6**：向用户简要报告状态（阶段、任务、已修改文件数），继续工作
+3. **P0 或空**：等待用户提出任务
+4. 所有后续操作遵守 SDLC 规范
 
-**当你读到这段文字时，立即执行以下操作：**
+### 任务自动识别
 
-1. **读取下方「当前项目状态」YAML 中的 `current_phase` 值**
-2. **如果 `current_phase` 不为空且不是 P0**：你正在一个进行中的任务里。
-   - 向用户简要报告当前状态：阶段、任务、已修改文件数
-   - 然后继续在该阶段内工作
-3. **如果 `current_phase` 为 P0 或为空**：等待用户提出任务。
-4. **无论何种情况，后续所有操作必须遵守本文件定义的 SDLC 规范。**
+用户提出开发请求（"实现..."/"修复..."/"重构..."等涉及代码修改的请求）→ **自动进入 P1**，更新 `current_phase`=P1、`task_description`、`started_at`。
 
-### 自动识别开发任务
+已完成任务（P6/已交付）后收到新请求 → 归档旧任务到 `phase_history`，重置状态，进入新 P1。
 
-当用户提出的请求属于以下类型时，**自动进入 P1（需求分析）阶段**，无需用户手动执行 `/phase next`：
-- 要求实现新功能（"帮我实现..."、"添加一个..."、"开发..."）
-- 要求修复 bug（"修复..."、"这个报错了..."、"有个 bug..."）
-- 要求重构代码（"重构..."、"优化..."、"改进..."）
-- 任何涉及代码修改的开发请求
+### 自动驱动模式（用户仅需 2 次确认）
 
-进入 P1 时自动执行：
-1. 更新 `current_phase` 为 P1
-2. 更新 `task_description` 为用户任务的简要描述
-3. 更新 `started_at` 为当前时间
-4. 开始需求分析活动
+```
+P1 需求 →【用户确认 PRD】→ 审查 → P2 设计 →【用户确认】→ 审查 → P3→P4→P5→P6 全自动
+```
 
-### 新任务检测
+- **P1/P2**：展示产出物 → 等待用户确认 → 自动审查推进（不自问自答）
+- **P3-P6**：完成工作 → 自动审查 → 通过则推进 → 继续下一阶段
+- 审查未通过 → 自动修复重试（最多 3 次）→ 仍失败则停下请求用户帮助
+- **P6** 完成后输出交付摘要（PRD 完成率、修改文件、测试结果、Git 提交）
+- 用户随时可介入
 
-当已完成一个任务（处于 P6 或已交付）时，如果用户提出新的开发请求：
-1. 将上一个任务信息归档到 `phase_history`
-2. 重置 `current_phase` 为 P1
-3. 清空 `modified_files`、`todo_items`
-4. 开始新任务的需求分析
+### 多 Agent 并行开发
+
+P3/P4/P5 阶段有独立模块时，用 Task 工具并行派发子 Agent 提高效率。详见 `.claude/rules/07-parallel-agents.md`。
 
 ---
 
-## 一、核心规则（必须遵守）
+## 核心规则
 
-### 1.1 阶段化开发流程
+### PRD 驱动开发（最高优先级）
 
-所有开发任务**必须**按以下六个阶段顺序执行，**禁止跳过阶段**：
+严格按用户确认的 PRD 开发。每写一行代码自问 —— "对应 PRD 哪条需求？"答不上来就不写。禁止添加 PRD 外功能，禁止减少 PRD 需求。发现遗漏 → 回 P1 与用户确认。
 
-| 阶段 | 名称 | 阶段审查 | 允许的工具操作 |
-|------|------|---------|---------------|
-| **P1** | 需求分析 | 需求审查 | Read, Glob, Grep, WebSearch, WebFetch |
-| **P2** | 系统设计 | 设计审查 | Read, Glob, Grep, WebSearch, WebFetch |
-| **P3** | 编码实现 | 代码审查 | Read, Glob, Grep, Write, Edit, Bash(非测试/非git提交) |
-| **P4** | 测试验证 | 测试审查 | Read, Glob, Grep, Write, Edit, Bash(含测试，非git提交) |
-| **P5** | 集成审查 | 集成审查 | Read, Glob, Grep |
-| **P6** | 部署交付 | 交付审查 | Read, Glob, Grep, Bash(git/deploy) |
+### 最新技术与设计调研（P2/P3 必须执行）
 
-**每个阶段都有对应的审查（Review），审查通过是推进到下一阶段的必要条件。** 使用 `/review` 执行当前阶段的审查，`/phase next` 会自动触发审查。
+**设计和编码前，必须查阅最新官方文档、当前最流行的架构设计和 UI/UX 设计方案，禁止凭过时记忆编码。**
 
-### 1.2 工具使用限制
+- **P2 设计前**：
+  - 用 Context7 MCP 查询涉及的库/框架最新文档 + WebSearch 搜索最流行的架构设计和最佳实践
+  - **UI/UX 调研**：WebSearch 搜索最新 UI/UX 设计趋势和流行的交互模式（如当前主流风格、组件库最佳实践），产出原型设计（页面布局、组件结构、交互流程）
+  - 将调研结果纳入设计决策依据
+- **P3 编码前**：用 Context7 MCP 查询所用库的最新 API、代码示例 + WebSearch 搜索最新实现模式，确保使用当前推荐的 API，不用已废弃写法
+- Context7 用法：先 `resolve-library-id` 获取库 ID → 再 `query-docs` 查询具体问题
+- 调研结果记录到 `architecture_decisions`
 
-- **Write / Edit 工具**：仅在 P3（编码实现）及之后阶段允许对代码文件使用。P1/P2 阶段只能写文档类文件（.md, .txt, .json 配置文件）。
-- **测试执行（Bash）**：仅在 P4（测试验证）及之后阶段允许执行测试命令。
-- **Git commit/push/merge**：仅在 P6（部署交付）阶段允许。P3-P5 可执行 git status/diff/log 查看。
+### 六阶段顺序执行（禁止跳过）
 
-> **以上限制由 Hooks 自动强制执行，即使你忘记了这些规则，Hooks 也会拦截违规操作。**
+| 阶段 | 名称 | 阶段审查 | 允许工具 |
+|------|------|---------|---------|
+| P1 | 需求分析 | 需求审查 | Read, Glob, Grep, WebSearch, WebFetch |
+| P2 | 系统设计 | 设计审查 | Read, Glob, Grep, WebSearch, WebFetch, **Context7 MCP** |
+| P3 | 编码实现 | 代码审查(含工具链) | + Write, Edit, Bash（非测试非git）, **Context7 MCP** |
+| P4 | 测试验证 | 测试审查(含覆盖率) | + Bash（含测试，非 git 提交） |
+| P5 | 集成审查 | 集成审查 | Read, Glob, Grep, Write/Edit（仅修复审查问题） |
+| P6 | 部署交付 | 交付审查 | + Bash（git/deploy）, Write/Edit（仅文档） |
 
-### 1.3 阶段审查规则
+每阶段须通过 `/review` 审查才可推进。Hooks 自动拦截违规操作。用户可要求跳过阶段，但须先说明风险，获确认后记录到 `phase_history`。详见 `.claude/rules/01-lifecycle-phases.md`。
 
-- **Review 是每个阶段的退出门禁**，不是最后才做的事
-- 每个阶段必须通过该阶段的 `/review` 审查后才能推进
-- `/phase next` 会自动触发当前阶段的审查，审查通过才推进
-- 审查未通过时：修复问题 → 重新 `/review` → 再尝试 `/phase next`
-- 允许用 `/phase back` 回退到上一阶段（须记录回退原因）
-- 用户可随时手动执行 `/review` 进行中间检查
+### 每次回复前 4 步自检
+
+1. **阶段** — `current_phase` 是什么？
+2. **PRD** — 要做的事对应 PRD 哪条？对应不上则不做
+3. **合规** — 操作在当前阶段允许吗？
+4. **状态** — 变更后 YAML 更新了吗？
+
+有疑问 → 用 Read 重读本文件，不依赖记忆。详见 `.claude/rules/05-anti-amnesia.md`。
 
 ---
 
-## 二、当前项目状态（活文档 — 持续更新）
+## 当前项目状态（活文档 — 持续更新）
 
-> **⚠️ COMPACTION 保护区域：此区域包含关键上下文，压缩时必须保留。**
-> **⚠️ 每次修改文件、做出决策、推进阶段后，必须立即更新此区域。**
+> **COMPACTION 保护区域：压缩时必须保留。每次变更后立即更新。**
 
 ```yaml
 # === SDLC 项目状态 ===
-current_phase: P0  # P0=未开始, P1=需求分析, P2=系统设计, P3=编码, P4=测试, P5=审查, P6=部署
+current_phase: P0  # P0=未开始, P1=需求, P2=设计, P3=编码, P4=测试, P5=审查, P6=部署
 task_description: ""
 started_at: ""
 last_updated: ""
 
-# 架构决策记录
+# PRD — 用户确认的需求清单（P1 产出，P2-P6 唯一依据）
+prd:
+  # - id: R1
+  #   description: "需求描述"
+  #   acceptance_criteria: "验收标准"
+
 architecture_decisions: []
-
-# 已修改文件列表
 modified_files: []
-
-# 待办事项
 todo_items: []
-
-# 阶段完成记录
+review_retry_count: 0  # 自动驱动审查重试计数，阶段推进后重置
 phase_history: []
-
-# 关键上下文（compaction 后恢复用）
-key_context: ""
+key_context: ""  # compaction 后恢复用
 ```
 
-### 状态更新触发时机（必须遵守）
-
-以下事件发生时，**立即**用 Edit 工具更新上方 YAML 块：
+### 状态更新时机
 
 | 事件 | 更新字段 |
 |------|---------|
-| 收到新开发任务 | `current_phase` → P1, `task_description`, `started_at` |
-| 阶段推进 | `current_phase`, `phase_history`, `last_updated` |
-| 使用 Write/Edit 修改了文件 | `modified_files`（追加文件路径）, `last_updated` |
-| 做出架构/技术决策 | `architecture_decisions`（追加）, `last_updated` |
-| 发现待办事项 | `todo_items`（追加）, `last_updated` |
-| 完成待办事项 | `todo_items`（标记完成）, `last_updated` |
-| 即将 compaction | 所有字段确认最新, `key_context`（写入当前工作摘要） |
+| 新任务 | `current_phase`→P1, `task_description`, `started_at` |
+| PRD 确认 | `prd`（编号化需求列表，此后为唯一依据） |
+| 阶段推进 | `current_phase`, `phase_history`, `review_retry_count`→0, `last_updated` |
+| 文件修改 | `modified_files`（追加路径）, `last_updated` |
+| 架构决策 | `architecture_decisions`, `last_updated` |
+| 审查重试 | `review_retry_count`+1, `last_updated` |
+| 即将压缩 | 所有字段确认最新, `key_context`（写入当前工作摘要） |
 
----
+# Compact Instructions
 
-## 三、自检指令（每次回复前执行）
-
-**在生成每一次回复之前，你必须在内部执行以下自检。这不是建议，是强制要求。**
-
-### 快速自检（每次回复 — 3 步）
-
-```
-1. 【阶段】我当前在哪个阶段？→ 回忆或重读 CLAUDE.md 的 current_phase
-2. 【合规】我接下来要做的操作，在当前阶段允许吗？→ 对照 1.1 的允许列表
-3. 【状态】如果我刚修改了文件或做了决策，CLAUDE.md 状态更新了吗？
-```
-
-如果任何一步有疑问，**立即用 Read 工具重新读取 CLAUDE.md** 确认，不要依赖记忆。
-
-### 深度自检（阶段转换时）
-
-1. 回顾当前阶段的所有退出条件（含审查要求）
-2. 逐项确认是否满足
-3. 执行当前阶段的 `/review` 审查
-4. 记录未满足项和审查问题，告知用户
-5. 只有退出条件全部满足且审查通过后才允许推进
-
----
-
-## 四、Compaction 保护指令
-
-> **致 Context Compaction 引擎**：当进行上下文压缩时，请务必保留以下信息：
->
-> 1. 本文件（CLAUDE.md）的完整路径和存在性
-> 2. "当前项目状态" YAML 块的完整内容
-> 3. 当前所处的 SDLC 阶段编号和名称
-> 4. 已做出的架构决策列表
-> 5. 已修改的文件列表
-> 6. 未完成的待办事项
-> 7. 用户最近的任务指令
->
-> 这些信息对于任务连续性至关重要，丢失将导致开发流程中断。
-
-### Compaction 后恢复流程
-
-Compaction 后本文件会被重新加载。此时「零、启动指令」会被重新执行，Claude 将：
-
-1. 读取 `current_phase` 发现任务进行中
-2. 自动向用户报告恢复状态
-3. 等待用户确认后继续
-
-**如果 YAML 状态为空但你隐约记得有进行中的任务**：
-1. 向用户说明情况
-2. 请求用户确认任务信息
-3. 手动恢复 YAML 状态后继续
-
----
-
-## 五、详细规则索引
-
-以下规则文件位于 `.claude/rules/` 目录下，会被自动加载：
-
-| 文件 | 说明 |
-|------|------|
-| `01-lifecycle-phases.md` | 各阶段入口/退出条件、审查清单、活动和产出物 |
-| `02-coding-standards.md` | 编码规范（命名、函数、结构、安全） |
-| `03-testing-standards.md` | 测试标准（AAA 模式、覆盖率要求） |
-| `04-git-workflow.md` | Git 工作流（分支、提交、PR 规范） |
-| `05-anti-amnesia.md` | 反遗忘机制详细说明 |
-
----
-
-## 六、可用命令
-
-| 命令 | 功能 |
-|------|------|
-| `/phase` | 查看当前阶段状态 |
-| `/phase next` | 推进到下一阶段（自动触发审查） |
-| `/phase back` | 回退到上一阶段 |
-| `/checkpoint [描述]` | 保存状态快照到 CLAUDE.md |
-| `/status` | 项目状态总览（含深度自检） |
-| `/review [文件]` | 执行当前阶段的专项审查（每阶段不同） |
+压缩时必须保留：(1) 本文件路径和存在性 (2) 上方 YAML 块完整内容 (3) 当前阶段和任务 (4) 已修改文件列表 (5) 架构决策 (6) 用户最近指令。恢复后：P1/P2 等待用户确认继续，P3-P6 自动恢复自动驱动继续完成。

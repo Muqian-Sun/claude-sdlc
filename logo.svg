@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- 盾牌渐变 -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9"/>
+      <stop offset="100%" style="stop-color:#6366F1"/>
+    </linearGradient>
+    <!-- 内部深色渐变 -->
+    <linearGradient id="innerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E293B"/>
+      <stop offset="100%" style="stop-color:#0F172A"/>
+    </linearGradient>
+    <!-- 环形渐变 -->
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22D3EE"/>
+      <stop offset="50%" style="stop-color:#818CF8"/>
+      <stop offset="100%" style="stop-color:#E879F9"/>
+    </linearGradient>
+    <!-- 箭头渐变 -->
+    <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#22D3EE"/>
+      <stop offset="100%" style="stop-color:#818CF8"/>
+    </linearGradient>
+    <!-- 对勾渐变 -->
+    <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#34D399"/>
+      <stop offset="100%" style="stop-color:#22D3EE"/>
+    </linearGradient>
+    <!-- 外发光 -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 背景（透明） -->
+
+  <!-- 盾牌外形 -->
+  <path d="M256 42 L440 120 L440 280 Q440 380 256 472 Q72 380 72 280 L72 120 Z"
+        fill="url(#shieldGrad)" opacity="0.9"/>
+
+  <!-- 盾牌内部 -->
+  <path d="M256 62 L422 132 L422 276 Q422 368 256 452 Q90 368 90 276 L90 132 Z"
+        fill="url(#innerGrad)"/>
+
+  <!-- 六阶段循环环 -->
+  <circle cx="256" cy="248" r="108" stroke="url(#ringGrad)" stroke-width="3.5"
+          fill="none" opacity="0.5" filter="url(#softGlow)"/>
+
+  <!-- P1-P6 六个节点 -->
+  <!-- P1 - 顶部 (需求) -->
+  <circle cx="256" cy="140" r="22" fill="#0F172A" stroke="#22D3EE" stroke-width="2.5"/>
+  <text x="256" y="145" text-anchor="middle" fill="#22D3EE"
+        font-family="SF Mono, Menlo, monospace" font-size="14" font-weight="700">P1</text>
+
+  <!-- P2 - 右上 (设计) -->
+  <circle cx="350" cy="194" r="22" fill="#0F172A" stroke="#60A5FA" stroke-width="2.5"/>
+  <text x="350" y="199" text-anchor="middle" fill="#60A5FA"
+        font-family="SF Mono, Menlo, monospace" font-size="14" font-weight="700">P2</text>
+
+  <!-- P3 - 右下 (编码) -->
+  <circle cx="350" cy="302" r="22" fill="#0F172A" stroke="#818CF8" stroke-width="2.5"/>
+  <text x="350" y="307" text-anchor="middle" fill="#818CF8"
+        font-family="SF Mono, Menlo, monospace" font-size="14" font-weight="700">P3</text>
+
+  <!-- P4 - 底部 (测试) -->
+  <circle cx="256" cy="356" r="22" fill="#0F172A" stroke="#A78BFA" stroke-width="2.5"/>
+  <text x="256" y="361" text-anchor="middle" fill="#A78BFA"
+        font-family="SF Mono, Menlo, monospace" font-size="14" font-weight="700">P4</text>
+
+  <!-- P5 - 左下 (审查) -->
+  <circle cx="162" cy="302" r="22" fill="#0F172A" stroke="#C084FC" stroke-width="2.5"/>
+  <text x="162" y="307" text-anchor="middle" fill="#C084FC"
+        font-family="SF Mono, Menlo, monospace" font-size="14" font-weight="700">P5</text>
+
+  <!-- P6 - 左上 (交付) -->
+  <circle cx="162" cy="194" r="22" fill="#0F172A" stroke="#E879F9" stroke-width="2.5"/>
+  <text x="162" y="199" text-anchor="middle" fill="#E879F9"
+        font-family="SF Mono, Menlo, monospace" font-size="14" font-weight="700">P6</text>
+
+  <!-- 连接箭头弧线 P1→P2→P3→P4→P5→P6→P1 -->
+  <!-- P1→P2 -->
+  <path d="M275 147 Q310 155 340 178" stroke="#38BDF8" stroke-width="2"
+        fill="none" marker-end="url(#arrowHead)"/>
+  <!-- P2→P3 -->
+  <path d="M356 216 Q360 255 356 282" stroke="#6366F1" stroke-width="2"
+        fill="none" marker-end="url(#arrowHead)"/>
+  <!-- P3→P4 -->
+  <path d="M335 318 Q305 340 278 350" stroke="#818CF8" stroke-width="2"
+        fill="none" marker-end="url(#arrowHead)"/>
+  <!-- P4→P5 -->
+  <path d="M237 362 Q200 355 178 322" stroke="#A78BFA" stroke-width="2"
+        fill="none" marker-end="url(#arrowHead)"/>
+  <!-- P5→P6 -->
+  <path d="M158 280 Q155 240 158 216" stroke="#C084FC" stroke-width="2"
+        fill="none" marker-end="url(#arrowHead)"/>
+  <!-- P6→P1 -->
+  <path d="M178 178 Q210 155 237 147" stroke="#E879F9" stroke-width="2"
+        fill="none" marker-end="url(#arrowHead)"/>
+
+  <!-- 箭头定义 -->
+  <defs>
+    <marker id="arrowHead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#818CF8" opacity="0.8"/>
+    </marker>
+  </defs>
+
+  <!-- 中心对勾 -->
+  <path d="M232 248 L250 268 L284 228" stroke="url(#checkGrad)" stroke-width="6"
+        stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#glow)"/>
+</svg>

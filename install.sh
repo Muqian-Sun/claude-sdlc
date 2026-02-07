@@ -102,6 +102,7 @@ success "已安装 CLAUDE.md"
 mkdir -p "$TARGET_DIR/.claude/rules"
 mkdir -p "$TARGET_DIR/.claude/hooks"
 mkdir -p "$TARGET_DIR/.claude/commands"
+mkdir -p "$TARGET_DIR/.claude/reviews"
 success "已创建 .claude/ 目录结构"
 
 # === Step 4: 复制 rules 文件 ===
@@ -145,15 +146,17 @@ if [ -f "$TARGET_SETTINGS" ]; then
     warn "已备份原 settings.json 为：$(basename "$BACKUP_SETTINGS")"
 
     # 合并策略：将 SDLC hooks 添加到现有 hooks 中（不覆盖其他配置）
+    # 新格式：每个 hook 组为 { matcher: {...}, hooks: [...] }，用 hooks 内容去重
     MERGED=$(jq -s '
+      def dedup_hooks: group_by(.hooks | map(.command // .prompt) | join("|")) | map(.[0]);
       .[0] as $existing |
       .[1] as $new |
       $existing * {
         hooks: {
-          PreToolUse: (($existing.hooks.PreToolUse // []) + ($new.hooks.PreToolUse // []) | unique_by(.command // .prompt)),
-          PostToolUse: (($existing.hooks.PostToolUse // []) + ($new.hooks.PostToolUse // []) | unique_by(.command // .prompt)),
-          Stop: (($existing.hooks.Stop // []) + ($new.hooks.Stop // []) | unique_by(.command // .prompt)),
-          PreCompact: (($existing.hooks.PreCompact // []) + ($new.hooks.PreCompact // []) | unique_by(.command // .prompt))
+          PreToolUse: (($existing.hooks.PreToolUse // []) + ($new.hooks.PreToolUse // []) | dedup_hooks),
+          PostToolUse: (($existing.hooks.PostToolUse // []) + ($new.hooks.PostToolUse // []) | dedup_hooks),
+          Stop: (($existing.hooks.Stop // []) + ($new.hooks.Stop // []) | dedup_hooks),
+          PreCompact: (($existing.hooks.PreCompact // []) + ($new.hooks.PreCompact // []) | dedup_hooks)
         }
       }
     ' "$TARGET_SETTINGS" "$SOURCE_SETTINGS" 2>/dev/null) || {
@@ -189,19 +192,22 @@ echo "========================================"
 echo ""
 echo "已安装的文件："
 echo "  $TARGET_DIR/"
-echo "  ├── CLAUDE.md                    (核心控制文件)"
+echo "  ├── CLAUDE.md                    (核心控制文件 ~100行，自动加载)"
 echo "  └── .claude/"
 echo "      ├── settings.json            (Hooks 配置)"
-echo "      ├── rules/"
+echo "      ├── reviews/                  (审查报告持久化)"
+echo "      ├── rules/                   (详细规则，自动加载)"
 echo "      │   ├── 01-lifecycle-phases.md"
 echo "      │   ├── 02-coding-standards.md"
 echo "      │   ├── 03-testing-standards.md"
 echo "      │   ├── 04-git-workflow.md"
-echo "      │   └── 05-anti-amnesia.md"
-echo "      ├── hooks/"
+echo "      │   ├── 05-anti-amnesia.md"
+echo "      │   ├── 06-review-tools.md"
+echo "      │   └── 07-parallel-agents.md"
+echo "      ├── hooks/                   (运行时拦截)"
 echo "      │   ├── check-phase-write.sh"
 echo "      │   └── check-phase-test.sh"
-echo "      └── commands/"
+echo "      └── commands/                (斜杠命令)"
 echo "          ├── phase.md             (/phase)"
 echo "          ├── checkpoint.md        (/checkpoint)"
 echo "          ├── status.md            (/status)"
