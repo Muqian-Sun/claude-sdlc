@@ -88,7 +88,7 @@ cd your-project
 claude
 ```
 
-Claude 会自动加载 SDLC 规范。当你提出开发任务时，Claude 会从 P1（需求分析）开始。
+Claude 会自动加载 SDLC 规范。**当你提出开发任务时（如"帮我实现..."），Claude 会自动进入 P1（需求分析），无需手动操作。**
 
 ### 阶段管理
 
@@ -127,20 +127,38 @@ Claude 会自动加载 SDLC 规范。当你提出开发任务时，Claude 会从
 
 ---
 
-## 反遗忘机制
+## 自动执行 — 无需人为干预
 
-本系统通过五层防御对抗 Claude Code 的上下文遗忘问题：
+本系统的设计目标：**Claude 在任何情况下都能自己读取规范、按规范执行**，用户不需要提醒。
 
-1. **CLAUDE.md**：每次启动和 compaction 后自动加载，包含完整的规范摘要和项目状态
-2. **rules/ 目录**：详细规范定义，自动加载，不受 compaction 影响
-3. **PreToolUse Hooks**：运行时拦截违规操作，即使 Claude 忘记规范也能阻止
-4. **Stop Hook**：每次回复后检查 SDLC 合规性
-5. **PreCompact Hook**：compaction 前提醒 Claude 更新 CLAUDE.md 中的项目状态
+### 七层防御机制
+
+| 层 | 机制 | 类型 | 作用 |
+|----|------|------|------|
+| 1 | CLAUDE.md 启动指令 | 主动 | 每次加载时自动执行状态检查和初始化 |
+| 2 | rules/ 规则文件 | 主动 | 详细规范自动加载，compaction 后重新加载 |
+| 3 | PreToolUse Hooks | 被动 | 硬拦截违规操作（写代码/测试/git），不依赖 Claude 自觉 |
+| 4 | PostToolUse Hook | 主动 | 每次文件修改后提醒更新 CLAUDE.md 状态 |
+| 5 | Stop Hook | 主动 | 每次回复后强制重读 CLAUDE.md 并自检合规性 |
+| 6 | PreCompact Hook | 主动 | 压缩前强制保存所有状态到 CLAUDE.md |
+| 7 | 用户命令 | 按需 | /status、/checkpoint、/phase、/review |
+
+### 自动化流程
 
 ```
-正常工作 → 自检（每次回复） → Hooks 拦截（每次工具调用）
-                                     ↓
-Context Compaction → PreCompact 提醒更新 → 重新加载 CLAUDE.md + rules → 恢复状态
+用户说"帮我实现X"
+     ↓
+CLAUDE.md 启动指令自动识别 → 进入 P1 → 开始需求分析
+     ↓
+每次回复 → Stop Hook 强制自检
+每次工具调用 → PreToolUse Hook 拦截违规
+每次文件修改 → PostToolUse Hook 同步状态
+     ↓
+Context Compaction 发生
+     ↓
+PreCompact Hook → 保存状态到 CLAUDE.md
+     ↓
+CLAUDE.md + rules/ 重新加载 → 启动指令重新执行 → 自动恢复
 ```
 
 ---

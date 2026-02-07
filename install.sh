@@ -151,6 +151,7 @@ if [ -f "$TARGET_SETTINGS" ]; then
       $existing * {
         hooks: {
           PreToolUse: (($existing.hooks.PreToolUse // []) + ($new.hooks.PreToolUse // []) | unique_by(.command // .prompt)),
+          PostToolUse: (($existing.hooks.PostToolUse // []) + ($new.hooks.PostToolUse // []) | unique_by(.command // .prompt)),
           Stop: (($existing.hooks.Stop // []) + ($new.hooks.Stop // []) | unique_by(.command // .prompt)),
           PreCompact: (($existing.hooks.PreCompact // []) + ($new.hooks.PreCompact // []) | unique_by(.command // .prompt))
         }
@@ -213,7 +214,8 @@ echo "  3. 使用 /phase 查看当前阶段"
 echo "  4. 使用 /status 查看项目状态"
 echo ""
 echo "注意："
-echo "  - Hook 脚本依赖 jq 工具解析 JSON。如未安装，请运行："
+echo "  - Hook 脚本在无 jq 时会自动降级为 sed 解析（仍然可用）"
+echo "  - 建议安装 jq 以获得更可靠的 JSON 解析和 settings.json 智能合并："
 echo "    macOS:  brew install jq"
 echo "    Ubuntu: sudo apt-get install jq"
 echo ""

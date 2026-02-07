@@ -12,16 +12,23 @@
         "command": "bash .claude/hooks/check-phase-test.sh"
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "type": "prompt",
+        "prompt": "你刚刚修改了一个文件。请立即用 Edit 工具将该文件路径追加到 CLAUDE.md「当前项目状态」YAML 块的 modified_files 列表中（如果尚未记录）。同时更新 last_updated 为当前时间。这是强制要求，不可跳过。"
+      }
+    ],
     "Stop": [
       {
         "type": "prompt",
-        "prompt": "在回复用户之前，请执行 SDLC 合规自检：\n1. 确认当前 SDLC 阶段（检查 CLAUDE.md 中的 current_phase）\n2. 确认本次回复中使用的工具是否在当前阶段允许范围内\n3. 如果进行了文件修改或重要决策，确保 CLAUDE.md 的「当前项目状态」已更新\n4. 如果即将完成当前阶段，提醒用户可使用 /phase next 推进\n如果发现任何偏离规范的行为，立即纠正并向用户说明。"
+        "prompt": "【SDLC 强制自检 — 每次回复后执行】\n\n你必须执行以下检查，然后决定是否需要追加操作：\n\n1. 用 Read 工具读取 CLAUDE.md，确认 current_phase 值。你当前实际做的事和该阶段匹配吗？\n2. 本次回复中使用的所有工具，是否都在当前阶段的允许列表内？如果有违规，立即向用户说明。\n3. CLAUDE.md 的「当前项目状态」YAML 是否为最新？如果你做了文件修改、架构决策或推进了阶段但还没更新 YAML，现在必须更新。\n4. 如果当前阶段的工作已完成，提醒用户可以用 /phase next 推进（推进时会自动触发审查）。\n\n如果发现任何偏离 SDLC 规范的行为，立即纠正并向用户说明。"
       }
     ],
     "PreCompact": [
       {
-        "type": "command",
-        "command": "echo '⚠️ 即将进行上下文压缩（Context Compaction）。\\n请确保 CLAUDE.md 中的「当前项目状态」区域已更新为最新状态，包括：\\n- current_phase（当前阶段）\\n- task_description（任务描述）\\n- modified_files（已修改文件列表）\\n- architecture_decisions（架构决策）\\n- todo_items（待办事项）\\n- key_context（关键上下文摘要）\\n\\n压缩后 CLAUDE.md 将被重新加载，上述信息将用于恢复工作状态。'"
+        "type": "prompt",
+        "prompt": "【紧急 — 上下文即将被压缩】\n\n你必须在压缩发生前完成以下操作：\n\n1. 立即用 Read 工具读取 CLAUDE.md 的「当前项目状态」YAML 块\n2. 检查以下字段是否为最新值：\n   - current_phase（当前阶段）\n   - task_description（任务描述）\n   - modified_files（所有已修改的文件路径）\n   - architecture_decisions（所有架构决策）\n   - todo_items（所有待办事项）\n   - key_context（当前工作的关键上下文摘要）\n3. 如果任何字段不是最新，立即用 Edit 工具更新 CLAUDE.md\n4. 特别注意 key_context 字段：写入一段简要摘要，描述当前正在做什么、下一步计划是什么\n\n压缩后 CLAUDE.md 会被重新加载，以上信息将用于恢复工作状态。如果你不更新，状态将丢失。"
       }
     ]
   }
