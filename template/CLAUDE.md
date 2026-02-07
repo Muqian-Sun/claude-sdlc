@@ -11,14 +11,16 @@
 
 所有开发任务**必须**按以下六个阶段顺序执行，**禁止跳过阶段**：
 
-| 阶段 | 名称 | 允许的工具操作 |
-|------|------|---------------|
-| **P1** | 需求分析 | Read, Glob, Grep, WebSearch, WebFetch |
-| **P2** | 系统设计 | Read, Glob, Grep, WebSearch, WebFetch |
-| **P3** | 编码实现 | Read, Glob, Grep, Write, Edit, Bash(非测试) |
-| **P4** | 测试验证 | Read, Glob, Grep, Write, Edit, Bash(含测试) |
-| **P5** | 代码审查 | Read, Glob, Grep |
-| **P6** | 部署交付 | Read, Glob, Grep, Bash(git/deploy) |
+| 阶段 | 名称 | 阶段审查 | 允许的工具操作 |
+|------|------|---------|---------------|
+| **P1** | 需求分析 | 需求审查 | Read, Glob, Grep, WebSearch, WebFetch |
+| **P2** | 系统设计 | 设计审查 | Read, Glob, Grep, WebSearch, WebFetch |
+| **P3** | 编码实现 | 代码审查 | Read, Glob, Grep, Write, Edit, Bash(非测试) |
+| **P4** | 测试验证 | 测试审查 | Read, Glob, Grep, Write, Edit, Bash(含测试) |
+| **P5** | 集成审查 | 集成审查 | Read, Glob, Grep |
+| **P6** | 部署交付 | 交付审查 | Read, Glob, Grep, Bash(git/deploy) |
+
+**每个阶段都有对应的审查（Review），审查通过是推进到下一阶段的必要条件。** 使用 `/review` 执行当前阶段的审查，`/phase next` 会自动触发审查。
 
 ### 1.2 工具使用限制
 
@@ -26,12 +28,14 @@
 - **测试执行（Bash）**：仅在 P4（测试验证）及之后阶段允许执行测试命令。
 - **Git 操作**：仅在 P6（部署交付）阶段执行 commit/push 操作，P3-P5 可执行 git status/diff 查看。
 
-### 1.3 阶段推进规则
+### 1.3 阶段审查规则
 
-- 每个阶段必须满足**退出条件**后才能推进到下一阶段
-- 用户可使用 `/phase next` 命令请求推进
-- 推进前必须确认退出条件已满足
+- **Review 是每个阶段的退出门禁**，不是最后才做的事
+- 每个阶段必须通过该阶段的 `/review` 审查后才能推进
+- `/phase next` 会自动触发当前阶段的审查，审查通过才推进
+- 审查未通过时：修复问题 → 重新 `/review` → 再尝试 `/phase next`
 - 允许用 `/phase back` 回退到上一阶段（须记录回退原因）
+- 用户可随时手动执行 `/review` 进行中间检查
 
 ---
 
@@ -78,10 +82,11 @@ key_context: ""
 
 ### 深度自检（阶段转换时）
 
-1. 回顾当前阶段的所有退出条件
+1. 回顾当前阶段的所有退出条件（含审查要求）
 2. 逐项确认是否满足
-3. 记录未满足项并告知用户
-4. 只有全部满足后才允许推进
+3. 执行当前阶段的 `/review` 审查
+4. 记录未满足项和审查问题，告知用户
+5. 只有退出条件全部满足且审查通过后才允许推进
 
 ---
 
@@ -132,4 +137,4 @@ key_context: ""
 | `/phase back` | 回退到上一阶段 |
 | `/checkpoint [描述]` | 保存状态快照 |
 | `/status` | 项目状态总览 |
-| `/review [文件]` | 触发代码审查流程 |
+| `/review [文件]` | 执行当前阶段的专项审查（每阶段不同） |
