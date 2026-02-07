@@ -164,14 +164,28 @@ hooks:
 
 **0. 工具检测与安装**：检测项目所需的审查工具是否已安装，未安装则自动安装（见 06-review-tools.md）
 
-1. **Lint 检查**：运行项目对应的 lint 工具
-   - 0 error → ✅ | 有 error → 必须修复后重新审查
-   - warning 记录但不阻塞
-2. **类型检查**（如适用）：运行 typecheck
+**重要：所有 Bash 命令必须写成单行，禁止换行。** 直接复制下方命令模板使用。
+
+1. **Lint 检查**（按项目类型选一条执行）：
+   - Node.js: `npx eslint . 2>&1; echo "LINT_EXIT=$?"`
+   - Python: `ruff check . 2>&1; echo "LINT_EXIT=$?"`
+   - Go: `go vet ./... 2>&1; echo "LINT_EXIT=$?"`
+   - Rust: `cargo clippy 2>&1; echo "LINT_EXIT=$?"`
+   - 0 error → ✅ | 有 error → 必须修复后重新审查 | warning 记录但不阻塞
+2. **类型检查**（如适用，按项目类型选一条执行）：
+   - Node.js: `npx tsc --noEmit 2>&1; echo "TSC_EXIT=$?"`
+   - Python: `mypy . 2>&1; echo "MYPY_EXIT=$?"`
    - 0 error → ✅ | 有 error → 必须修复
-3. **构建验证**：运行 build 命令
+3. **构建验证**（按项目类型选一条执行）：
+   - Node.js: `npm run build 2>&1; echo "BUILD_EXIT=$?"`
+   - Go: `go build ./... 2>&1; echo "BUILD_EXIT=$?"`
+   - Rust: `cargo build 2>&1; echo "BUILD_EXIT=$?"`
    - 构建成功 → ✅ | 失败 → 必须修复
-4. **依赖安全审计**：运行 audit 命令
+4. **依赖安全审计**（按项目类型选一条执行）：
+   - Node.js: `npm audit 2>&1; echo "AUDIT_EXIT=$?"`
+   - Python: `pip audit 2>&1; echo "AUDIT_EXIT=$?"`
+   - Go: `govulncheck ./... 2>&1; echo "AUDIT_EXIT=$?"`
+   - Rust: `cargo audit 2>&1; echo "AUDIT_EXIT=$?"`
    - 0 high/critical → ✅ | 有 high/critical → 记录为审查问题
 
 工具未安装时：**自动安装**（见 06-review-tools.md 安装规则）。安装仍失败时：记录"⚠️ [工具名] 安装失败，跳过"，不阻塞审查。
@@ -248,7 +262,14 @@ hooks:
 
 ### 工具执行（P4 审查前必须运行）
 
-1. **执行全部测试**（带覆盖率）
+**重要：所有 Bash 命令必须写成单行，禁止换行。** 直接复制下方命令模板使用。
+
+1. **执行全部测试**（带覆盖率，按项目类型选一条执行）：
+   - Node.js (Jest): `npx jest --coverage 2>&1; echo "TEST_EXIT=$?"`
+   - Node.js (Vitest): `npx vitest run --coverage 2>&1; echo "TEST_EXIT=$?"`
+   - Python: `pytest --cov 2>&1; echo "TEST_EXIT=$?"`
+   - Go: `go test -coverprofile=cover.out ./... 2>&1; echo "TEST_EXIT=$?"`
+   - Rust: `cargo test 2>&1; echo "TEST_EXIT=$?"`
    - 解析输出：通过数、失败数、跳过数
    - 解析覆盖率：行覆盖率、分支覆盖率
 2. **判定标准**：
