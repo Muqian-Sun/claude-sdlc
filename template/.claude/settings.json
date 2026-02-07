@@ -4,6 +4,7 @@
     "SessionStart": [
       {
         "matcher": "startup|resume|compact",
+        "description": "注入 SDLC 阶段上下文，根据 source 定制恢复信息",
         "hooks": [
           {
             "type": "command",
@@ -15,6 +16,7 @@
     ],
     "UserPromptSubmit": [
       {
+        "description": "每次用户提交时注入阶段提醒，防止长对话漂移",
         "hooks": [
           {
             "type": "command",
@@ -27,20 +29,24 @@
     "PreToolUse": [
       {
         "matcher": "Write|Edit",
+        "description": "P3 前拦截代码文件写入",
         "hooks": [
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-phase-write.sh",
+            "timeout": 3,
             "statusMessage": "检查写入权限..."
           }
         ]
       },
       {
         "matcher": "Bash",
+        "description": "P4 前拦截测试命令，P6 前拦截 git 提交",
         "hooks": [
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-phase-test.sh",
+            "timeout": 3,
             "statusMessage": "检查命令权限..."
           }
         ]
@@ -49,6 +55,7 @@
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
+        "description": "文件修改后提醒更新 project-state.md",
         "hooks": [
           {
             "type": "command",
@@ -61,6 +68,7 @@
     ],
     "Stop": [
       {
+        "description": "回复后轻量自检，注入阶段提醒",
         "hooks": [
           {
             "type": "command",
@@ -72,6 +80,7 @@
     ],
     "PreCompact": [
       {
+        "description": "压缩前检查状态完整性，注入紧急保存提醒",
         "hooks": [
           {
             "type": "command",
@@ -83,6 +92,7 @@
     ],
     "SubagentStart": [
       {
+        "description": "子 Agent 启动时注入 SDLC 阶段+PRD+工具限制",
         "hooks": [
           {
             "type": "command",
@@ -95,6 +105,7 @@
     ],
     "TaskCompleted": [
       {
+        "description": "子任务完成时提醒验证合规性",
         "hooks": [
           {
             "type": "command",
@@ -106,6 +117,7 @@
     ],
     "SubagentStop": [
       {
+        "description": "子 Agent 完成时验证输出质量",
         "hooks": [
           {
             "type": "command",
@@ -118,6 +130,7 @@
     ],
     "PostToolUseFailure": [
       {
+        "description": "工具失败后注入恢复建议",
         "hooks": [
           {
             "type": "command",
@@ -129,6 +142,7 @@
     ],
     "PermissionRequest": [
       {
+        "description": "按 SDLC 阶段自动决策权限请求",
         "hooks": [
           {
             "type": "command",
@@ -141,6 +155,7 @@
     ],
     "SessionEnd": [
       {
+        "description": "会话结束时归档状态摘要",
         "hooks": [
           {
             "type": "command",
@@ -196,7 +211,7 @@
   },
   "env": {
     "SDLC_PROJECT": "true",
-    "SDLC_VERSION": "1.3.0"
+    "SDLC_VERSION": "1.4.0"
   },
   "attribution": {
     "commit": "Co-Authored-By: Claude (SDLC Enforced) <noreply@anthropic.com>"

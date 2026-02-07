@@ -6,10 +6,11 @@ if [ ! -f "$STATE_FILE" ]; then
   exit 0
 fi
 
-PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$STATE_FILE" 2>/dev/null | head -1)
+# 单次 awk 提取阶段和阶段号
+eval "$(awk '
+  /^current_phase:/ { gsub(/[^A-Za-z0-9]/,"",$2); phase=$2; num=phase; gsub(/[^0-9]/,"",num); printf "PHASE=%s\nPHASE_NUM=%d\n", phase, num+0 }
+' "$STATE_FILE" 2>/dev/null)"
 
-# 仅在自动驱动阶段（P3-P5）检查
-PHASE_NUM=$(echo "$PHASE" | sed 's/[^0-9]//g')
 PHASE_NUM=${PHASE_NUM:-0}
 
 if [ "$PHASE_NUM" -lt 3 ] || [ "$PHASE_NUM" -gt 5 ]; then

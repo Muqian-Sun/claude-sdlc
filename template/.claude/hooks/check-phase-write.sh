@@ -1,68 +1,46 @@
 #!/usr/bin/env bash
 # check-phase-write.sh — PreToolUse hook for Write/Edit
-# 在 P3（编码实现）之前拦截对代码文件的写入操作
-# 文档类文件（.md, .txt, .json, .yaml, .yml 等）在任何阶段放行
-
+# P3 前拦截代码文件写入，文档/配置文件任何阶段放行
 set -euo pipefail
 
-# 从 stdin 读取 JSON 输入
 INPUT=$(cat)
 
-# 提取文件路径（从 tool_input 中获取 file_path）
-# 兼容 jq 不存在的情况
+# 提取文件路径
 if command -v jq &>/dev/null; then
   FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 else
-  # 无 jq 时用 sed 粗略提取（容错）
   FILE_PATH=$(echo "$INPUT" | sed -n 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' 2>/dev/null | head -1)
 fi
 
-# 如果无法获取文件路径，默认放行
-if [ -z "$FILE_PATH" ]; then
-  exit 0
-fi
+[ -z "$FILE_PATH" ] && exit 0
 
-# 文档/配置类文件扩展名 — 任何阶段都允许写入
-DOC_EXTENSIONS='\.(md|txt|json|yaml|yml|toml|ini|cfg|conf|gitignore|editorconfig|prettierrc|eslintrc|csv|xml|svg|lock|log|env|env\..*)$'
+# 文档/配置文件扩展名 — bash case 零子进程
+EXT="${FILE_PATH##*.}"
+case "${EXT,,}" in
+  md|txt|json|yaml|yml|toml|ini|cfg|conf|gitignore|editorconfig|prettierrc|eslintrc|csv|xml|svg|lock|log)
+    exit 0 ;;
+esac
+# .env 及 .env.* 文件也放行（由 permissions deny 控制）
+case "$FILE_PATH" in
+  *.env|*.env.*) exit 0 ;;
+esac
 
-if echo "$FILE_PATH" | grep -qiE "$DOC_EXTENSIONS"; then
-  exit 0
-fi
-
-# 读取当前阶段（文件优先，环境变量兜底）
+# 读取阶段 — 单次 awk
 STATE_FILE="${CLAUDE_PROJECT_DIR:-.}/.claude/project-state.md"
 if [ -f "$STATE_FILE" ]; then
-  CURRENT_PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$STATE_FILE" 2>/dev/null | head -1)
+  PHASE_NUM=$(awk '/^current_phase:/{gsub(/[^0-9]/,"",$2); print $2; exit}' "$STATE_FILE" 2>/dev/null)
 fi
-CURRENT_PHASE="${CURRENT_PHASE:-$SDLC_PHASE}"
+PHASE_NUM="${PHASE_NUM:-${SDLC_PHASE:+$(echo "$SDLC_PHASE" | sed 's/[^0-9]//g')}}"
+[ -z "$PHASE_NUM" ] && exit 0
 
-# 如果无法确定阶段，默认放行（容错）
-if [ -z "$CURRENT_PHASE" ]; then
-  exit 0
+# P3+ 放行
+[ "$PHASE_NUM" -ge 3 ] && exit 0
+
+# 拦截 — JSON permissionDecision 格式
+REASON="当前阶段 P${PHASE_NUM} 不允许修改代码文件（P3 起可用）"
+if command -v jq &>/dev/null; then
+  jq -n --arg r "$REASON" '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
+else
+  printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"%s"}}' "$REASON"
 fi
-
-# 提取阶段编号（P0→0, P1→1, ...）
-PHASE_NUM=$(echo "$CURRENT_PHASE" | sed 's/[^0-9]//g' 2>/dev/null)
-
-if [ -z "$PHASE_NUM" ]; then
-  exit 0
-fi
-
-# P3（编号 3）及以上允许写代码文件
-if [ "$PHASE_NUM" -ge 3 ]; then
-  exit 0
-fi
-
-# P0/P1/P2 阶段不允许写代码文件 — 输出拦截信息
-cat <<EOF
-⛔ SDLC 规范拦截：当前阶段 $CURRENT_PHASE 不允许修改代码文件。
-
-- 当前阶段：$CURRENT_PHASE
-- 尝试修改的文件：$FILE_PATH
-- 代码文件写入最早允许在 P3（编码实现）阶段
-
-请先完成当前阶段的工作。P1/P2 阶段需要用户确认 PRD/设计后自动推进到 P3。
-如确需在当前阶段修改此文件，请告知用户并获得明确授权。
-EOF
-
-exit 2
+exit 0

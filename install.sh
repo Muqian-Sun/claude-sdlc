@@ -102,6 +102,8 @@ success "已安装 CLAUDE.md"
 mkdir -p "$TARGET_DIR/.claude/rules"
 mkdir -p "$TARGET_DIR/.claude/hooks"
 mkdir -p "$TARGET_DIR/.claude/commands"
+mkdir -p "$TARGET_DIR/.claude/skills"
+mkdir -p "$TARGET_DIR/.claude/agents"
 mkdir -p "$TARGET_DIR/.claude/reviews"
 success "已创建 .claude/ 目录结构"
 
@@ -130,6 +132,28 @@ for cmd_file in "$TEMPLATE_DIR/.claude/commands"/*.md; do
   fi
 done
 
+# === Step 6b: 复制 skills ===
+if [ -d "$TEMPLATE_DIR/.claude/skills" ]; then
+  for skill_dir in "$TEMPLATE_DIR/.claude/skills"/*/; do
+    if [ -d "$skill_dir" ]; then
+      skill_name=$(basename "$skill_dir")
+      mkdir -p "$TARGET_DIR/.claude/skills/$skill_name"
+      if [ -f "$skill_dir/SKILL.md" ]; then
+        cp "$skill_dir/SKILL.md" "$TARGET_DIR/.claude/skills/$skill_name/"
+        success "已安装 Skill：$skill_name"
+      fi
+    fi
+  done
+fi
+
+# === Step 6c: 复制 agents ===
+for agent_file in "$TEMPLATE_DIR/.claude/agents"/*.md; do
+  if [ -f "$agent_file" ]; then
+    cp "$agent_file" "$TARGET_DIR/.claude/agents/"
+    success "已安装 Agent：$(basename "$agent_file")"
+  fi
+done
+
 # === Step 7: 智能合并 settings.json ===
 TARGET_SETTINGS="$TARGET_DIR/.claude/settings.json"
 SOURCE_SETTINGS="$TEMPLATE_DIR/.claude/settings.json"
@@ -146,7 +170,7 @@ if [ -f "$TARGET_SETTINGS" ]; then
     warn "已备份原 settings.json 为：$(basename "$BACKUP_SETTINGS")"
 
     # 合并策略：将 SDLC hooks 添加到现有 hooks 中（不覆盖其他配置）
-    # 新格式：每个 hook 组为 { matcher: {...}, hooks: [...] }，用 hooks 内容去重
+    # 按 matcher 去重合并所有 12 种 hook 类型
     MERGED=$(jq -s '
       def dedup_hooks: group_by(.hooks | map(.command // .prompt) | join("|")) | map(.[0]);
       .[0] as $existing |
@@ -155,8 +179,16 @@ if [ -f "$TARGET_SETTINGS" ]; then
         hooks: {
           PreToolUse: (($existing.hooks.PreToolUse // []) + ($new.hooks.PreToolUse // []) | dedup_hooks),
           PostToolUse: (($existing.hooks.PostToolUse // []) + ($new.hooks.PostToolUse // []) | dedup_hooks),
+          PostToolUseFailure: (($existing.hooks.PostToolUseFailure // []) + ($new.hooks.PostToolUseFailure // []) | dedup_hooks),
           Stop: (($existing.hooks.Stop // []) + ($new.hooks.Stop // []) | dedup_hooks),
-          PreCompact: (($existing.hooks.PreCompact // []) + ($new.hooks.PreCompact // []) | dedup_hooks)
+          PreCompact: (($existing.hooks.PreCompact // []) + ($new.hooks.PreCompact // []) | dedup_hooks),
+          SessionStart: (($existing.hooks.SessionStart // []) + ($new.hooks.SessionStart // []) | dedup_hooks),
+          SessionEnd: (($existing.hooks.SessionEnd // []) + ($new.hooks.SessionEnd // []) | dedup_hooks),
+          UserPromptSubmit: (($existing.hooks.UserPromptSubmit // []) + ($new.hooks.UserPromptSubmit // []) | dedup_hooks),
+          SubagentStart: (($existing.hooks.SubagentStart // []) + ($new.hooks.SubagentStart // []) | dedup_hooks),
+          SubagentStop: (($existing.hooks.SubagentStop // []) + ($new.hooks.SubagentStop // []) | dedup_hooks),
+          TaskCompleted: (($existing.hooks.TaskCompleted // []) + ($new.hooks.TaskCompleted // []) | dedup_hooks),
+          PermissionRequest: (($existing.hooks.PermissionRequest // []) + ($new.hooks.PermissionRequest // []) | dedup_hooks)
         }
       }
     ' "$TARGET_SETTINGS" "$SOURCE_SETTINGS" 2>/dev/null) || {
@@ -192,26 +224,16 @@ echo "========================================"
 echo ""
 echo "已安装的文件："
 echo "  $TARGET_DIR/"
-echo "  ├── CLAUDE.md                    (核心控制文件 ~100行，自动加载)"
+echo "  ├── CLAUDE.md                    (核心控制文件，自动加载)"
 echo "  └── .claude/"
-echo "      ├── settings.json            (Hooks 配置)"
-echo "      ├── reviews/                  (审查报告持久化)"
-echo "      ├── rules/                   (详细规则，自动加载)"
-echo "      │   ├── 01-lifecycle-phases.md"
-echo "      │   ├── 02-coding-standards.md"
-echo "      │   ├── 03-testing-standards.md"
-echo "      │   ├── 04-git-workflow.md"
-echo "      │   ├── 05-anti-amnesia.md"
-echo "      │   ├── 06-review-tools.md"
-echo "      │   └── 07-parallel-agents.md"
-echo "      ├── hooks/                   (运行时拦截)"
-echo "      │   ├── check-phase-write.sh"
-echo "      │   └── check-phase-test.sh"
-echo "      └── commands/                (斜杠命令)"
-echo "          ├── phase.md             (/phase)"
-echo "          ├── checkpoint.md        (/checkpoint)"
-echo "          ├── status.md            (/status)"
-echo "          └── review.md            (/review)"
+echo "      ├── project-state.md         (项目状态，升级时保留)"
+echo "      ├── settings.json            (Hooks + Permissions 配置)"
+echo "      ├── rules/                   (8 个规则文件，自动加载)"
+echo "      ├── hooks/                   (14 个 Hook 脚本，运行时拦截)"
+echo "      ├── skills/                  (4 个 Skills: /phase /status /checkpoint /review)"
+echo "      ├── commands/                (4 个斜杠命令 fallback)"
+echo "      ├── agents/                  (3 个自定义 Agent: coder/tester/reviewer)"
+echo "      └── reviews/                 (审查报告持久化)"
 echo ""
 echo "使用方法："
 echo "  1. cd $TARGET_DIR"

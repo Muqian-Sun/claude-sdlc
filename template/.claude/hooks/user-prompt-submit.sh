@@ -6,7 +6,7 @@ if [ ! -f "$STATE_FILE" ]; then
   exit 0
 fi
 
-PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$STATE_FILE" 2>/dev/null | head -1)
+PHASE=$(awk '/^current_phase:/{gsub(/[^A-Za-z0-9]/,"",$2); print $2; exit}' "$STATE_FILE" 2>/dev/null)
 
 if [ -z "$PHASE" ] || [ "$PHASE" = "P0" ]; then
   exit 0

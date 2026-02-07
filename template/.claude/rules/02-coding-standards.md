@@ -54,6 +54,9 @@ paths:
 - **Go**: camelCase 私有，PascalCase 导出，缩写全大写（如 HTTPServer）
 - **其他语言**: 遵循该语言社区的主流约定
 
+❌ `const d = getData()` → ✅ `const userProfile = fetchUserProfile()`
+❌ `def proc(x)` → ✅ `def process_payment(order)`
+
 ### 布尔值命名
 - 使用 is/has/can/should 前缀：`isActive`, `hasPermission`, `canEdit`
 
@@ -75,6 +78,9 @@ paths:
 - 函数体不超过 50 行（不含注释和空行）
 - 提前返回（early return），减少嵌套层级
 - 嵌套层级不超过 3 层
+
+❌ 一个函数做验证+转换+保存+通知 → ✅ 拆为 `validate()`, `transform()`, `save()`, `notify()`
+❌ `function handleRequest(data, shouldLog, isAdmin, useCache)` → ✅ `function handleRequest({ data, options })`
 
 ---
 

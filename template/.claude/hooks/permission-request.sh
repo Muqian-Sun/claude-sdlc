@@ -5,13 +5,11 @@ set -euo pipefail
 INPUT=$(cat)
 STATE_FILE="${CLAUDE_PROJECT_DIR:-.}/.claude/project-state.md"
 
-# 获取当前阶段
-PHASE="P0"
+# 获取阶段 — 单次 awk
+PHASE_NUM=0
 if [ -f "$STATE_FILE" ]; then
-  PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$STATE_FILE" 2>/dev/null | head -1)
+  PHASE_NUM=$(awk '/^current_phase:/{gsub(/[^0-9]/,"",$2); print $2; exit}' "$STATE_FILE" 2>/dev/null)
 fi
-PHASE="${PHASE:-${SDLC_PHASE:-P0}}"
-PHASE_NUM=$(echo "$PHASE" | sed 's/[^0-9]//g')
 PHASE_NUM="${PHASE_NUM:-0}"
 
 # 提取工具信息
@@ -24,36 +22,36 @@ else
   TOOL_NAME=$(echo "$INPUT" | sed -n 's/.*"tool_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' 2>/dev/null | head -1)
 fi
 
-# 默认：交给用户决定
 BEHAVIOR="allow"
 MESSAGE=""
 
-# 文档类文件扩展名
-DOC_EXT='\.(md|txt|json|yaml|yml|toml|ini|cfg|conf|csv|xml|svg|log)$'
-
 case "$TOOL_NAME" in
   Write|Edit)
-    if echo "$TOOL_ACTION" | grep -qiE "$DOC_EXT"; then
-      BEHAVIOR="allow"
-    elif [ "$PHASE_NUM" -ge 3 ]; then
-      BEHAVIOR="allow"
-    else
-      BEHAVIOR="deny"
-      MESSAGE="阶段 ${PHASE} 不允许修改代码文件（P3 起可用）"
-    fi
+    # 文档扩展名 — bash case 零子进程
+    EXT="${TOOL_ACTION##*.}"
+    case "${EXT,,}" in
+      md|txt|json|yaml|yml|toml|ini|cfg|conf|csv|xml|svg|log)
+        BEHAVIOR="allow" ;;
+      *)
+        if [ "$PHASE_NUM" -ge 3 ]; then
+          BEHAVIOR="allow"
+        else
+          BEHAVIOR="deny"
+          MESSAGE="阶段 P${PHASE_NUM} 不允许修改代码文件（P3 起可用）"
+        fi ;;
+    esac
     ;;
   Bash)
     if echo "$TOOL_ACTION" | grep -qiE '^git[[:space:]]+(status|diff|log|branch|stash)'; then
       BEHAVIOR="allow"
     elif echo "$TOOL_ACTION" | grep -qiE '(rm -rf|--force|reset --hard)'; then
-      # 危险命令始终交给用户
-      exit 0
+      exit 0  # 危险命令交给用户
     elif echo "$TOOL_ACTION" | grep -qiE '^git[[:space:]]+(commit|push|tag|merge)'; then
       [ "$PHASE_NUM" -ge 6 ] && BEHAVIOR="allow" || { BEHAVIOR="deny"; MESSAGE="Git 提交操作仅 P6 允许"; }
     elif echo "$TOOL_ACTION" | grep -qiE '(npm test|npx jest|npx vitest|pytest|go test|cargo test)'; then
       [ "$PHASE_NUM" -ge 4 ] && BEHAVIOR="allow" || { BEHAVIOR="deny"; MESSAGE="测试命令仅 P4 起允许"; }
     elif echo "$TOOL_ACTION" | grep -qiE '^(npx eslint|npx tsc|npm run lint|npm run build)'; then
-      [ "$PHASE_NUM" -ge 3 ] && BEHAVIOR="allow" || BEHAVIOR="allow"
+      BEHAVIOR="allow"
     else
       [ "$PHASE_NUM" -ge 3 ] && BEHAVIOR="allow"
     fi
@@ -70,12 +68,10 @@ case "$TOOL_NAME" in
     BEHAVIOR="allow"
     ;;
   *)
-    # 未知工具：不干预，让用户决定
-    exit 0
+    exit 0  # 未知工具不干预
     ;;
 esac
 
-# 输出决策 JSON
 if [ "$BEHAVIOR" = "deny" ] && [ -n "$MESSAGE" ]; then
   printf '{"hookSpecificOutput":{"decision":{"behavior":"deny","message":"%s"}}}' "$MESSAGE"
 elif [ "$BEHAVIOR" = "allow" ]; then

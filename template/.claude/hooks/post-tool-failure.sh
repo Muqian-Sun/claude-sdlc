@@ -5,7 +5,7 @@ INPUT=$(cat)
 
 PHASE="P0"
 if [ -f "$STATE_FILE" ]; then
-  PHASE=$(sed -n 's/^current_phase:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$STATE_FILE" 2>/dev/null | head -1)
+  PHASE=$(awk '/^current_phase:/{gsub(/[^A-Za-z0-9]/,"",$2); print $2; exit}' "$STATE_FILE" 2>/dev/null)
 fi
 PHASE="${PHASE:-P0}"
 
