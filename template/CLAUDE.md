@@ -88,3 +88,7 @@ P3/P4/P5 阶段有独立模块时，用 Task 工具并行派发自定义 Agents 
 4. **状态** — 变更后 `.claude/project-state.md` 更新了吗？
 
 有疑问 → 用 Read 重读 `.claude/project-state.md`，不依赖记忆。详见 `.claude/rules/05-anti-amnesia.md`。
+
+### Bash 命令格式（必须遵守）
+
+**所有 Bash 命令必须写成单行。** 禁止在 `2>&1`、`|`、`&&` 前换行，否则 zsh 会把下一行的内容当作独立命令执行导致报错。

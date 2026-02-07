@@ -57,6 +57,24 @@
 3. 工具执行成功 → 解析输出，提取关键指标
 4. 所有工具输出原文保留在审查报告中
 
+### Bash 命令格式要求（重要）
+
+**所有 Bash 命令必须写成单行**，禁止在命令中间换行。zsh 会将换行后的内容当作独立命令执行，导致 `command not found` 错误。
+
+正确示例：
+```bash
+npx eslint src/ 2>&1; echo "EXIT=$?"
+npx tsc --noEmit 2>&1; echo "EXIT=$?"
+npx jest --coverage 2>&1; echo "EXIT=$?"
+npm audit 2>&1; echo "EXIT=$?"
+```
+
+错误示例（禁止）：
+```bash
+npx eslint src/
+  2>&1; echo "EXIT=$?"    # ← zsh 会把 2 当命令执行！
+```
+
 ---
 
 ## 关键指标
