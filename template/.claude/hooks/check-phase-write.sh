@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # check-phase-write.sh — PreToolUse hook for Write/Edit
-# P3 前拦截代码文件写入，文档/配置文件任何阶段放行
+# P3 前拦截代码文件写入，文档/配置文件任何阶段放行，P2 允许原型 HTML/CSS
 set -euo pipefail
 
 INPUT=$(cat)
@@ -33,11 +33,18 @@ fi
 PHASE_NUM="${PHASE_NUM:-${SDLC_PHASE:+$(echo "$SDLC_PHASE" | sed 's/[^0-9]//g')}}"
 [ -z "$PHASE_NUM" ] && exit 0
 
-# P3+ 放行
+# P3+ 放行所有代码文件
 [ "$PHASE_NUM" -ge 3 ] && exit 0
 
+# P2 放行原型文件（HTML/CSS）— 用于 Chrome 展示设计原型
+if [ "$PHASE_NUM" -eq 2 ]; then
+  case "$EXT" in
+    html|css) exit 0 ;;
+  esac
+fi
+
 # 拦截 — JSON permissionDecision 格式
-REASON="当前阶段 P${PHASE_NUM} 不允许修改代码文件（P3 起可用）"
+REASON="当前阶段 P${PHASE_NUM} 不允许修改代码文件（P3 起可用，P2 仅允许原型 HTML/CSS）"
 if command -v jq &>/dev/null; then
   jq -n --arg r "$REASON" '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
 else

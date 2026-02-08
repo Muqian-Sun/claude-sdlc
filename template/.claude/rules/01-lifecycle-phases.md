@@ -50,13 +50,14 @@
 - 逐条对照 PRD 设计架构方案
 - 确定技术选型（基于最新文档，非过时记忆）
 - 原型设计（如涉及 UI）：页面布局、组件结构、交互流程、视觉风格、动效方案
+- **创建原型 HTML 文件并在 Chrome 中展示**（如涉及 UI）：写一个自包含的 HTML 文件（内联 CSS/JS），用 Chrome 打开让用户直观预览设计效果，根据反馈迭代
 - 设计数据模型和接口，制定文件修改计划
 - **为每条 PRD 需求标注对应的设计模块**
 
 ### 必需产出物
 - 技术调研记录 + 架构设计方案（引用最新文档）
 - PRD→设计映射表 + 文件修改清单
-- **UI 设计方案**（如涉及 UI）：组件库选型 + 配色方案 + 布局结构 + 交互细节 + 参考来源链接
+- **UI 原型文件 + Chrome 预览**（如涉及 UI）：自包含 HTML 原型 + 组件库选型 + 配色方案 + 布局结构 + 交互细节 + 参考来源链接
 - 实现步骤分解
 
 ### 审查清单（`/review`）
@@ -68,7 +69,7 @@
 - [ ] 技术选型有据（引用最新文档）
 
 ### 允许工具
-✅ Read, Glob, Grep, WebSearch, WebFetch, Context7 MCP, Chrome ❌ Write, Edit, Bash
+✅ Read, Glob, Grep, WebSearch, WebFetch, Context7 MCP, Chrome, Write/Edit（仅原型 HTML/CSS） ❌ Bash
 
 ---
 
