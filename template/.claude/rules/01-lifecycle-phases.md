@@ -8,7 +8,15 @@
 
 ## P1 — 需求分析
 
-分析用户需求，检查 `project_roadmap` 和 `completed_tasks` 确保与整体规划一致，创建编号化 PRD，**用户确认后直接推进到 P2**。
+分析用户需求，检查 `project_roadmap` 和 `completed_tasks` 确保与整体规划一致。**写 PRD 前必须先调研**，然后创建编号化 PRD，**用户确认后直接推进到 P2**。
+
+### 写 PRD 前必须执行的调研
+1. **技术调研**：Context7 MCP 查最新文档 + WebSearch 搜索最新方案/最佳实践，基于调研结果写需求
+2. **UI 设计调研**（涉及 UI 时）：
+   - WebSearch 搜索 `"{框架名} modern UI design {当前年份}"` `"best {框架名} UI component library {当前年份}"`
+   - 调研主流组件库（shadcn/ui、Radix、Ant Design 5、Material Design 3 等）最新设计语言
+   - **将 UI 标准写入 PRD**：选定的组件库、配色方案、设计风格作为需求的一部分
+   - **禁止过时/简陋的 UI 风格**（无样式 HTML、Bootstrap 3 默认主题、90 年代表格布局）
 
 ### PRD 确认流程
 1. 向用户展示完整 PRD（每条需求有编号 R1/R2...、验收标准、范围排除项）→ 用户确认 → 写入 project-state.md 的 `prd` 字段
@@ -16,7 +24,7 @@
 3. 如需修改 → 回 P1 重新获用户确认
 
 ### 允许工具
-✅ Read, Glob, Grep, WebSearch, WebFetch ❌ Write, Edit, Bash
+✅ Read, Glob, Grep, WebSearch, WebFetch, Context7 MCP ❌ Write, Edit, Bash
 
 ---
 
@@ -24,15 +32,10 @@
 
 **需用户确认** — 确认后直接推进到 P3 并启动自动驱动。
 
-### 必须执行的调研
-1. **技术调研**：Context7 MCP 查最新文档 + WebSearch 搜索最流行架构方案
-2. **UI 设计调研**（涉及 UI 时）：
-   - WebSearch 搜索 `"{框架名} modern UI design {当前年份}"` `"best {框架名} UI component library {当前年份}"`
-   - 调研主流组件库（shadcn/ui、Radix、Ant Design 5、Material Design 3 等）最新设计语言
-   - 确定配色方案、字体层级、间距系统、响应式断点
-   - **禁止过时/简陋的 UI 风格**（无样式 HTML、Bootstrap 3 默认主题、90 年代表格布局）
-3. 逐条对照 PRD 设计架构，为每条需求标注对应设计模块
-4. **创建原型 HTML 并在 Chrome 展示**（涉及 UI 时）：自包含 HTML 文件（内联 CSS/JS），用户预览后迭代
+### 设计任务
+1. **基于 P1 调研结果设计架构**：Context7 MCP 查 API 细节 + WebSearch 补充架构方案
+2. 逐条对照 PRD 设计架构，为每条需求标注对应设计模块
+3. **创建原型 HTML 并在 Chrome 展示**（涉及 UI 时）：基于 PRD 中选定的组件库/设计风格，自包含 HTML 文件（内联 CSS/JS），用户预览后迭代
 
 ### 允许工具
 ✅ Read, Glob, Grep, WebSearch, WebFetch, Context7 MCP, Chrome, Write/Edit（仅原型 HTML/CSS） ❌ Bash

@@ -18,11 +18,9 @@
 - **自动驱动**：P2 用户确认后，P3-P6 全自动。P5 审查未通过自动修复（最多3次）
 - **任务自动识别**：用户说"实现/修复/重构..." → 自动进入 P1。旧任务完成后新请求 → 归档到 `completed_tasks` + 重置任务字段 + 新 P1。**`project_roadmap`/`completed_tasks`/`global_architecture` 永不重置**
 
-## P2/P3 必须先调研
+## P1/P2/P3 必须先调研
 
-设计/编码前用 Context7 MCP 查最新文档 + WebSearch 查最新方案。禁止凭过时记忆编码。
-
-**P2 涉及 UI 时必须**：WebSearch 搜索当前最流行的 UI 设计趋势、组件库、配色方案。UI 必须现代化，禁止过时/简陋的设计风格。
+**P1 写 PRD 前必须调研**：Context7 MCP 查最新文档 + WebSearch 查最新方案，基于调研结果写需求。涉及 UI 时必须 WebSearch 搜索当前最流行的 UI 设计趋势、组件库、配色方案，将 UI 标准写入 PRD。禁止凭过时记忆写需求。
 
 ## 每次回复前自检
 
