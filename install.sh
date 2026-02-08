@@ -112,6 +112,25 @@ if [ -d "$TARGET_DIR/.claude/commands" ]; then
   success "已清理旧版 .claude/commands/（已被 skills/ 取代）"
 fi
 
+# === Step 3b: 安装 project-state.md ===
+TARGET_STATE="$TARGET_DIR/.claude/project-state.md"
+if [ -f "$TARGET_STATE" ]; then
+  success "project-state.md 已存在，跳过保护"
+elif [ -f "$TARGET_DIR/CLAUDE.md.bak."* ] 2>/dev/null; then
+  # 尝试从旧版 CLAUDE.md 备份中提取内嵌状态
+  LATEST_BACKUP=$(ls -t "$TARGET_DIR"/CLAUDE.md.bak.* 2>/dev/null | head -1)
+  if [ -n "$LATEST_BACKUP" ] && grep -q 'current_phase:.*P[1-6]' "$LATEST_BACKUP" 2>/dev/null; then
+    cp "$TEMPLATE_DIR/.claude/project-state.md" "$TARGET_STATE"
+    warn "从旧版 CLAUDE.md 检测到活跃状态，请手动迁移到 project-state.md"
+  else
+    cp "$TEMPLATE_DIR/.claude/project-state.md" "$TARGET_STATE"
+    success "已安装 project-state.md"
+  fi
+else
+  cp "$TEMPLATE_DIR/.claude/project-state.md" "$TARGET_STATE"
+  success "已安装 project-state.md"
+fi
+
 # === Step 4: 复制 rules 文件 ===
 for rule_file in "$TEMPLATE_DIR/.claude/rules"/*.md; do
   if [ -f "$rule_file" ]; then
@@ -166,27 +185,15 @@ if [ -f "$TARGET_SETTINGS" ]; then
     cp "$TARGET_SETTINGS" "$BACKUP_SETTINGS"
     warn "已备份原 settings.json 为：$(basename "$BACKUP_SETTINGS")"
 
-    # 合并策略：将 SDLC hooks 添加到现有 hooks 中（不覆盖其他配置）
-    # 按 matcher 去重合并所有 12 种 hook 类型
+    # 合并策略：用新模板 hooks 覆盖旧版（按 matcher 匹配），保留用户其他配置
     MERGED=$(jq -s '
-      def dedup_hooks: group_by(.hooks | map(.command // .prompt) | join("|")) | map(.[0]);
-      .[0] as $existing |
-      .[1] as $new |
-      $existing * {
-        hooks: {
-          PreToolUse: (($existing.hooks.PreToolUse // []) + ($new.hooks.PreToolUse // []) | dedup_hooks),
-          PostToolUse: (($existing.hooks.PostToolUse // []) + ($new.hooks.PostToolUse // []) | dedup_hooks),
-          PostToolUseFailure: (($existing.hooks.PostToolUseFailure // []) + ($new.hooks.PostToolUseFailure // []) | dedup_hooks),
-          Stop: (($existing.hooks.Stop // []) + ($new.hooks.Stop // []) | dedup_hooks),
-          PreCompact: (($existing.hooks.PreCompact // []) + ($new.hooks.PreCompact // []) | dedup_hooks),
-          SessionStart: (($existing.hooks.SessionStart // []) + ($new.hooks.SessionStart // []) | dedup_hooks),
-          SessionEnd: (($existing.hooks.SessionEnd // []) + ($new.hooks.SessionEnd // []) | dedup_hooks),
-          UserPromptSubmit: (($existing.hooks.UserPromptSubmit // []) + ($new.hooks.UserPromptSubmit // []) | dedup_hooks),
-          SubagentStart: (($existing.hooks.SubagentStart // []) + ($new.hooks.SubagentStart // []) | dedup_hooks),
-          SubagentStop: (($existing.hooks.SubagentStop // []) + ($new.hooks.SubagentStop // []) | dedup_hooks),
-          TaskCompleted: (($existing.hooks.TaskCompleted // []) + ($new.hooks.TaskCompleted // []) | dedup_hooks),
-          PermissionRequest: (($existing.hooks.PermissionRequest // []) + ($new.hooks.PermissionRequest // []) | dedup_hooks)
-        }
+      .[0] as $existing | .[1] as $new |
+      ($new.hooks // {}) as $nh |
+      ($existing | del(.hooks)) * ($new | del(.hooks)) * {
+        hooks: (reduce ($nh | keys[]) as $type (
+          ($existing.hooks // {});
+          . + {($type): ($nh[$type] // [])}
+        ))
       }
     ' "$TARGET_SETTINGS" "$SOURCE_SETTINGS" 2>/dev/null) || {
       warn "自动合并失败，将覆盖安装 settings.json"
