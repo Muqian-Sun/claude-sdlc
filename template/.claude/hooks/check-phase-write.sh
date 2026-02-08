@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # check-phase-write.sh — PreToolUse hook for Write/Edit
-# P3 前拦截代码文件写入，文档/配置文件任何阶段放行，P2 允许原型 HTML/CSS
+# P3 前拦截代码文件写入，文档/配置文件任何阶段放行，P1 允许原型 HTML/CSS
 # 性能：bash 内置提取 + case 匹配，典型路径 1-2 个子进程
 set -euo pipefail
 
@@ -33,13 +33,13 @@ PHASE_NUM=$(awk '/^current_phase:/{gsub(/[^0-9]/,"",$2); print $2; exit}' "$STAT
 # P3+ 放行所有代码文件
 [ "$PHASE_NUM" -ge 3 ] && exit 0
 
-# P2 放行原型文件（HTML/CSS）— 用于 Chrome 展示设计原型
-if [ "$PHASE_NUM" -eq 2 ]; then
+# P1 放行原型文件（HTML/CSS）— 用于 Chrome 展示设计原型
+if [ "$PHASE_NUM" -eq 1 ]; then
   case "$EXT" in
     html|css) exit 0 ;;
   esac
 fi
 
 # 拦截 — JSON permissionDecision 格式（printf 零子进程）
-printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"当前阶段 P%s 不允许修改代码文件（P3 起可用，P2 仅允许原型 HTML/CSS）"}}' "$PHASE_NUM"
+printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"当前阶段 P%s 不允许修改代码文件（P3 起可用，P1 仅允许原型 HTML/CSS）"}}' "$PHASE_NUM"
 exit 0

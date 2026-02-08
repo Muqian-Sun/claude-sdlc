@@ -41,12 +41,20 @@ case "$TOOL_NAME" in
     case "$EXT" in
       md|txt|json|yaml|yml|toml|ini|cfg|conf|csv|xml|svg|log)
         BEHAVIOR="allow" ;;
+      html|css)
+        # P1 允许原型 HTML/CSS
+        if [ "$PHASE_NUM" -ge 1 ]; then
+          BEHAVIOR="allow"
+        else
+          BEHAVIOR="deny"
+          MESSAGE="阶段 P${PHASE_NUM} 不允许修改文件"
+        fi ;;
       *)
         if [ "$PHASE_NUM" -ge 3 ]; then
           BEHAVIOR="allow"
         else
           BEHAVIOR="deny"
-          MESSAGE="阶段 P${PHASE_NUM} 不允许修改代码文件（P3 起可用）"
+          MESSAGE="阶段 P${PHASE_NUM} 不允许修改代码文件（P3 起可用，P1 仅允许原型 HTML/CSS）"
         fi ;;
     esac
     ;;
@@ -68,11 +76,11 @@ case "$TOOL_NAME" in
     esac
     ;;
   Chrome)
-    if [ "$PHASE_NUM" -eq 2 ] || [ "$PHASE_NUM" -eq 4 ]; then
+    if [ "$PHASE_NUM" -eq 1 ] || [ "$PHASE_NUM" -ge 4 ]; then
       BEHAVIOR="allow"
     else
       BEHAVIOR="deny"
-      MESSAGE="Chrome 仅在 P2（UI 调研）和 P4（视觉测试）阶段允许"
+      MESSAGE="Chrome 仅在 P1（原型展示）和 P4+（测试/审查）阶段允许"
     fi
     ;;
   Read|Glob|Grep|WebSearch|WebFetch)

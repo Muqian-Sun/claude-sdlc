@@ -222,7 +222,7 @@
   },
   "env": {
     "SDLC_PROJECT": "true",
-    "SDLC_VERSION": "1.5.5"
+    "SDLC_VERSION": "1.6.0"
   },
   "attribution": {
     "commit": "Co-Authored-By: Claude (SDLC Enforced) <noreply@anthropic.com>"

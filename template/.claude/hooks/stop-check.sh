@@ -28,8 +28,8 @@ PHASE_NUM="${PHASE_NUM:-0}"
 
 # 构建检查提醒
 CHECKS=""
-if [ "$PHASE_NUM" -ge 1 ] && [ "$PHASE_NUM" -le 2 ]; then
-  CHECKS="阶段P${PHASE_NUM}：展示产出物后等待用户确认，不要自问自答。"
+if [ "$PHASE_NUM" -eq 1 ]; then
+  CHECKS="阶段P1：展示 PRD（含架构+原型）后等待用户确认，不要自问自答。"
 elif [ "$PHASE_NUM" -ge 3 ] && [ "$PHASE_NUM" -le 5 ]; then
   CHECKS="自动驱动阶段(P${PHASE_NUM})：(1) 当前阶段工作是否完成？(2) modified_files 是否最新？(3) 完成后执行 /review 审查再推进。"
 elif [ "$PHASE_NUM" -eq 6 ]; then
