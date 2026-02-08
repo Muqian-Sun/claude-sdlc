@@ -2,6 +2,7 @@
   "name": "claude-sdlc",
   "version": "1.8.0",
   "description": "让 Claude Code 严格按 SDLC 规范开发 — 一条命令安装",
+  "main": "lib/index.js",
   "bin": {
     "claude-sdlc": "./bin/cli.js"
   },
@@ -9,14 +10,33 @@
     "bin/",
     "lib/",
     "template/",
-    "plugin.json"
+    "plugin.json",
+    "README.md",
+    "LICENSE"
   ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Muqian-Sun/claude-sdlc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Muqian-Sun/claude-sdlc/issues"
+  },
+  "homepage": "https://github.com/Muqian-Sun/claude-sdlc#readme",
   "keywords": [
     "claude-code",
     "sdlc",
     "development-workflow",
-    "ai-coding"
+    "ai-coding",
+    "software-development",
+    "code-quality",
+    "automation"
   ],
   "author": "沐谦",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }
