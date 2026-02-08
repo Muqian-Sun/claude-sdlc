@@ -20,4 +20,5 @@ fi
 # 提醒主 Agent 验证子任务结果
 CONTEXT="[SDLC 子任务完成检查] 阶段=${PHASE}。子任务已完成，请验证：(1) 修改的文件已追加到 modified_files (2) 代码符合 PRD 需求 (3) 无 PRD 范围外的代码。如有问题请修复后再推进。"
 
-printf '{"hookSpecificOutput":{"hookEventName":"TaskCompleted","additionalContext":"%s"}}' "$CONTEXT"
+# TaskCompleted 不支持 hookSpecificOutput，用 stopReason 注入提醒
+printf '{"stopReason":"%s"}' "$CONTEXT"

@@ -25,4 +25,5 @@ WARNINGS=""
 
 CONTEXT="[SDLC 压缩前紧急保存] 上下文即将被压缩！阶段=${PHASE}，任务=${TASK}，PRD ${PRD_COUNT:-0}条，已修改${FILES_COUNT:-0}个文件。${WARNINGS}请立即用 Edit 更新 project-state.md：(1) 确认 modified_files 列表完整 (2) 将当前工作摘要写入 key_context (3) 更新 last_updated (4) 确认 project_roadmap 和 global_architecture 已记录（如有长期规划）。压缩后早期对话将丢失，这是最后保存机会。"
 
-printf '{"hookSpecificOutput":{"hookEventName":"PreCompact","additionalContext":"%s"}}' "$CONTEXT"
+# PreCompact 不支持 hookSpecificOutput，用 stopReason 注入提醒
+printf '{"stopReason":"%s"}' "$CONTEXT"

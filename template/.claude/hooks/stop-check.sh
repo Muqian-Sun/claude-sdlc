@@ -40,4 +40,4 @@ fi
 [ -z "$CHECKS" ] && exit 0
 
 CONTEXT="[SDLC 自检] 阶段=P${PHASE_NUM}，已修改${FILES_COUNT:-0}个文件。${CHECKS}"
-printf '{"hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"%s"}}' "$CONTEXT"
+printf '{"stopReason":"%s"}' "$CONTEXT"

@@ -84,7 +84,7 @@ case "$TOOL_NAME" in
 esac
 
 if [ "$BEHAVIOR" = "deny" ] && [ -n "$MESSAGE" ]; then
-  printf '{"hookSpecificOutput":{"decision":{"behavior":"deny","message":"%s"}}}' "$MESSAGE"
+  printf '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"%s"}}}' "$MESSAGE"
 elif [ "$BEHAVIOR" = "allow" ]; then
-  printf '{"hookSpecificOutput":{"decision":{"behavior":"allow"}}}'
+  printf '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}'
 fi
