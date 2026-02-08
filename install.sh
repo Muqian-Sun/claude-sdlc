@@ -106,6 +106,12 @@ mkdir -p "$TARGET_DIR/.claude/agents"
 mkdir -p "$TARGET_DIR/.claude/reviews"
 success "已创建 .claude/ 目录结构"
 
+# 升级清理：删除旧版 commands/ 目录（已被 skills/ 取代）
+if [ -d "$TARGET_DIR/.claude/commands" ]; then
+  rm -rf "$TARGET_DIR/.claude/commands"
+  success "已清理旧版 .claude/commands/（已被 skills/ 取代）"
+fi
+
 # === Step 4: 复制 rules 文件 ===
 for rule_file in "$TEMPLATE_DIR/.claude/rules"/*.md; do
   if [ -f "$rule_file" ]; then
