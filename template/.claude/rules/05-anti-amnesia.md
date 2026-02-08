@@ -15,18 +15,6 @@
 
 ---
 
-## 每次回复前自检
-
-1. current_phase？
-2. 对应 PRD 哪条？
-3. 当前阶段允许吗？
-4. project-state.md 更新了吗？
-5. project_roadmap 在规划中的位置？
-
-疑问 → Read `.claude/project-state.md`，不依赖记忆。
-
----
-
 ## 优先级
 
 1. **安全性** > 2. **用户指令**（先说明风险）> 3. **SDLC 流程** > 4. **编码标准** > 5. **Git 规范**

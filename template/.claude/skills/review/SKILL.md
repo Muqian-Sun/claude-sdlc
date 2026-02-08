@@ -24,21 +24,9 @@ hooks:
 
 ## 核心原则
 
-**P4 是唯一正式审查关卡**，涵盖代码质量+测试质量+集成一致性+PRD追溯。其他阶段无需审查（P1 靠用户确认，P2/P3/P5 完成即推进）。
+**P4 是唯一正式审查关卡**，涵盖代码质量+测试质量+集成一致性+PRD追溯。其他阶段无需审查。非 P4 阶段执行 `/review` 时提示"当前阶段无需审查"。
 
-非 P4 阶段执行 `/review` 时提示"当前阶段无需审查"。
-
----
-
-## 工具辅助审查
-
-审查 = 工具链输出（客观数据）+ LLM 审查（主观判断）。
-
-1. 自动检测项目类型（见 06-review-tools.md）
-2. 检测并安装缺失工具
-3. 运行工具收集输出
-4. 基于输出 + LLM 分析执行审查清单
-5. 生成报告 → 写入 `.claude/reviews/P4-review-{时间}.md`
+审查流程：自动检测项目类型（见 06-review-tools.md）→ 安装缺失工具 → 运行工具收集输出 → 基于输出执行审查清单 → 生成报告写入 `.claude/reviews/P4-review-{时间}.md`
 
 ---
 
@@ -46,70 +34,57 @@ hooks:
 
 **所有 Bash 命令写成单行。** 工具未安装时自动安装（见 06-review-tools.md）。
 
-### 代码工具链
-1. **Lint**：`npx eslint . 2>&1; echo "LINT_EXIT=$?"` — 0 error → ✅
-2. **Typecheck**：`npx tsc --noEmit 2>&1; echo "TSC_EXIT=$?"` — 0 error → ✅
-3. **Build**：`npm run build 2>&1; echo "BUILD_EXIT=$?"` — 成功 → ✅
-4. **依赖审计**：`npm audit 2>&1; echo "AUDIT_EXIT=$?"` — 0 high/critical → ✅
-
-（以上为 Node.js 示例，其他语言见 06-review-tools.md 对照表）
+### 代码工具链（Node.js 示例，其他语言见 06-review-tools.md）
+- **Lint**：`npx eslint . 2>&1; echo "LINT_EXIT=$?"`
+- **Typecheck**：`npx tsc --noEmit 2>&1; echo "TSC_EXIT=$?"`
+- **Build**：`npm run build 2>&1; echo "BUILD_EXIT=$?"`
+- **依赖审计**：`npm audit 2>&1; echo "AUDIT_EXIT=$?"`
 
 ### 测试验证
-**核心规则：测试只运行一次，从输出文件分析。整个审查最多 3 次测试。**
+**测试只运行一次，从输出文件分析。整个审查最多 3 次测试。**
 
-1. **运行一次**：`npx vitest run --coverage 2>&1 | tee /tmp/sdlc-test-output.txt; echo "TEST_EXIT=${PIPESTATUS[0]}"`
-2. **Read 分析**：读取 `/tmp/sdlc-test-output.txt` 提取通过数/失败数/覆盖率
-3. **如有失败**：一次性收集所有错误 → 批量修复 → 再运行一次验证
-4. 禁止：重复运行测试、`-t "name"` 单跑、每修一个跑一次
+1. 运行：`npx vitest run --coverage 2>&1 | tee /tmp/sdlc-test-output.txt; echo "TEST_EXIT=${PIPESTATUS[0]}"`
+2. Read 分析：读取 `/tmp/sdlc-test-output.txt` 提取结果
+3. 失败处理：一次性收集所有错误 → 批量修复 → 再运行一次验证
 
 ---
 
 ## 审查清单
 
 ### 5.1 代码质量
-- [ ] **Lint + Typecheck + Build 通过** + **依赖安全**无 high/critical
-- [ ] 无已废弃 API 调用 + 与 PRD 架构方案一致
-- [ ] 代码质量 — 按 02-coding-standards.md 检查（函数≤50行、嵌套≤3层）
-- [ ] 无注入/XSS/硬编码敏感信息 + 无冗余代码
+- [ ] **Lint + Typecheck + Build + 依赖安全**通过（0 error，无 high/critical 漏洞）
+- [ ] 代码规范按 02-coding-standards.md + 无安全漏洞 + 无冗余代码
 
 ### 5.2 测试质量
 - [ ] **每条 PRD 需求有对应测试** + 测试全部通过
 - [ ] **覆盖率**：行 ≥80%、关键业务 ≥90%、分支 ≥70%
-- [ ] 测试质量 — 命名清晰、独立、mock 合理、回归保护
 
 ### 5.3 集成一致性 + PRD 追溯
 - [ ] **PRD 四环追溯** — 需求→设计→代码文件:行号→测试用例，无断链
-- [ ] **无 PRD 外变更**
-- [ ] 全局一致性（接口、数据模型、错误处理策略一致）
-- [ ] 安全性 + 性能（无 N+1、无重复 I/O）+ 无遗漏 TODO/FIXME
+- [ ] **无 PRD 外变更** + 全局一致性 + 安全性 + 性能 + 无遗漏 TODO/FIXME
 
 ### 5.4 交付就绪
 - [ ] 无敏感信息 + Commit 粒度合理 + 文档按需更新
 
 ---
 
-## 输出格式
+## 输出格式（简洁版）
 ```
-╔══════════════════════════════════════╗
-║       P4 综合审查报告                ║
-╚══════════════════════════════════════╝
+# P4 综合审查报告
 
-工具链：Lint {✅/❌} | Typecheck {✅/❌} | Build {✅/❌} | 依赖 {✅/⚠️}
-测试：通过 {n} / 失败 {n} / 覆盖率 {n}%
+**工具链**: Lint ✅ | Typecheck ✅ | Build ✅ | 依赖 ✅
+**测试**: 通过 {n} / 失败 {n} / 覆盖率 {n}%
 
-5.1 代码质量：{✅ / ❌}
-5.2 测试质量：{✅ / ❌}
-5.3 集成+PRD：{✅ / ❌}
-5.4 交付就绪：{✅ / ❌}
+**审查结果**:
+- 5.1 代码质量: ✅
+- 5.2 测试质量: ✅
+- 5.3 集成+PRD: ✅
+- 5.4 交付就绪: ✅
 
-PRD 追溯表：
-  R1 → 设计模块A → src/foo.ts:10-50 → test/foo.test.ts ✅
-  R2 → 设计模块B → src/bar.ts:5-30 → test/bar.test.ts ✅
+**PRD 追溯**: R1→src/foo.ts:10-50→test/foo.test.ts ✅ | R2→src/bar.ts:5-30→test/bar.test.ts ✅
 
-发现的问题：
-  1. [严重程度] {描述} → {建议}
-
-结论：{通过 / 需修改后通过}
+**问题**: {无 / [严重程度] 描述 → 建议}
+**结论**: {通过 / 需修改}
 ```
 
 ---

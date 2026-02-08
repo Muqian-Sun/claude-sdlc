@@ -2,8 +2,6 @@
 
 所有阶段顺序执行，禁止跳过。严格按 PRD 开发。
 
-**审查策略**：**P4 是唯一正式审查关卡**（代码+测试+集成+PRD追溯）。P1 靠用户确认推进，P2/P3/P5 完成后直接推进。
-
 ---
 
 ## P1 — 需求分析 + 架构设计
@@ -11,20 +9,17 @@
 分析用户需求，检查 `project_roadmap` 和 `completed_tasks` 确保与整体规划一致。**先调研，再设计架构，涉及 UI 时创建原型在 Chrome 展示**，最后输出包含架构方案的完整 PRD，**用户确认后直接推进到 P2 并启动自动驱动**。
 
 ### 1. 调研（写 PRD 前必须执行）
-1. **技术调研**：Context7 MCP 查最新文档 + WebSearch 搜索最新方案/最佳实践
-2. **UI 设计调研**（涉及 UI 时）：
-   - WebSearch 搜索 `"{框架名} modern UI design {当前年份}"` `"best {框架名} UI component library {当前年份}"`
-   - 调研主流组件库（shadcn/ui、Radix、Ant Design 5、Material Design 3 等）最新设计语言
-   - **禁止过时/简陋的 UI 风格**（无样式 HTML、Bootstrap 3 默认主题、90 年代表格布局）
+| 类型 | 操作 | 工具 |
+|------|------|------|
+| 技术调研 | 查最新文档+方案/最佳实践 | Context7 MCP, WebSearch |
+| UI 调研（涉及 UI 时） | 搜索"{框架名} modern UI design {年份}"，调研 shadcn/ui、Radix、Ant Design 5、MD3 等。禁止过时风格（无样式 HTML、Bootstrap 3、90 年代表格） | WebSearch |
 
 ### 2. 架构设计
-1. 基于调研结果设计技术架构：模块划分、数据模型、接口定义、技术选型
-2. 逐条对照需求设计架构，为每条需求标注对应设计模块
+基于调研结果设计技术架构：模块划分、数据模型、接口定义、技术选型
 
 ### 3. 原型设计与展示（涉及 UI 时）
 1. 基于调研结果创建自包含原型 HTML（内联 CSS/JS），用 Chrome 打开展示给用户
-2. 用户预览后可迭代修改，直到满意再确认 PRD
-3. 原型确定的视觉风格作为 PRD 的一部分锁定
+2. 原型确定的视觉风格作为 PRD 的一部分，用户确认后锁定
 
 ### 4. PRD 确认
 1. 向用户展示完整 PRD：每条需求编号 R1/R2...、验收标准、范围排除项 + **架构方案**（技术选型、模块划分、数据模型）+ UI 原型
@@ -32,7 +27,7 @@
 3. PRD 写入即锁定，后续阶段以此为唯一依据。如需修改 → 回 P1 重新获用户确认
 
 ### 允许工具
-✅ Read, Glob, Grep, WebSearch, WebFetch, Context7 MCP, Chrome, Write/Edit（仅原型 HTML/CSS） ❌ Bash
+✅ Read, Glob, Grep, WebSearch, WebFetch, Context7 MCP, Chrome, Write/Edit（仅原型） ❌ Bash
 
 ---
 
@@ -47,10 +42,6 @@
 - ❌ 跳过任何 PRD 需求 / 自行替换用户确认的方案
 - 发现 PRD 遗漏 → 停止编码，回 P1 确认
 
-### 完成条件
-- [ ] PRD 全实现（逐条对照）
-- [ ] 代码可编译/无语法错误
-
 ### 允许工具
 ✅ Read, Glob, Grep, Write, Edit, Bash（非测试非git）, Context7 MCP, WebSearch ❌ Bash 测试命令
 
@@ -59,11 +50,6 @@
 ## P3 — 测试验证
 
 **自动驱动** — 测试全通过后直接进入 P4。有独立模块时可并行派发 `sdlc-tester` Agent。
-
-### 完成条件
-- [ ] 每条 PRD 需求有对应测试
-- [ ] 测试全部通过 0 failure
-- [ ] 覆盖率：行 ≥80%
 
 ### 允许工具
 ✅ Read, Glob, Grep, Write, Edit, Bash（含测试）, Chrome
@@ -81,10 +67,8 @@
 ### 审查清单（`/review`）
 
 #### 代码质量
-- [ ] **Lint 通过** 0 error + **类型检查通过** + **构建成功** + **依赖安全**无 high/critical
-- [ ] 无已废弃 API 调用 + 与 PRD 架构方案一致
-- [ ] 代码质量 — 函数≤50行、嵌套≤3层（详见 02-coding-standards.md）
-- [ ] 无注入/XSS/硬编码敏感信息 + 无冗余代码
+- [ ] **Lint + Typecheck + Build + 依赖安全**通过（0 error，无 high/critical 漏洞）
+- [ ] 代码规范按 02-coding-standards.md + 无安全漏洞（注入/XSS/硬编码敏感信息）
 
 #### 测试质量
 - [ ] 每条 PRD 需求有对应测试 + 测试全部通过

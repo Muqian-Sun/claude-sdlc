@@ -19,29 +19,17 @@ allowed-tools:
 
 ## 执行逻辑
 
-1. **读取 project-state.md**：所有 YAML 字段（current_phase、task_description、prd、modified_files、todo_items、phase_history、architecture_decisions、review_retry_count、key_context、时间信息）
+1. **读取 project-state.md**：所有 YAML 字段
 2. **收集 Git 信息**（如可用）：当前分支、未提交变更、最近 commit
-3. **生成状态报告**：
+3. **生成状态报告**（Markdown 格式）：
 
-```
-╔══════════════════════════════════════╗
-║        SDLC 项目状态报告             ║
-╚══════════════════════════════════════╝
+**SDLC 项目状态报告**
 
-基本信息：任务 / 开始时间 / 最后更新
-
-阶段进度：
-  当前：{阶段编号} — {名称}
-  模式：{用户确认 (P1) / 自动驱动 (P2-P5)}
-  审查重试：{n}/3
-  历史：P1 ✅ → P2 🔄 → P3 ⬜ → P4 ⬜ → P5 ⬜
-  退出条件：✅ {已满足} / ❌ {未满足}
-
-文件变更：已修改 {n} 个文件 + 未提交变更摘要
-架构决策：{列表}
-待办事项：{列表}
-
-合规性：SDLC 流程 / 编码规范 / 测试覆盖 / 文档更新
-```
+- **任务**：{task_description} | 开始：{started_at} | 更新：{last_updated}
+- **阶段进度**：当前 {current_phase}（{用户确认/自动驱动}）| 审查重试：{n}/3
+- **进度**：P1 ✅ → P2 🔄 → P3 ⬜ → P4 ⬜ → P5 ⬜
+- **文件变更**：已修改 {n} 个文件
+- **架构决策**：{列表}
+- **待办事项**：{列表}
 
 4. **同步更新** project-state.md（如信息不是最新）+ 更新 `last_updated`
