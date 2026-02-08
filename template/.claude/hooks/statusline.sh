@@ -15,18 +15,18 @@ TASK=$(sed -n 's/^task_description:[[:space:]]*"\(.*\)"/\1/p' "$STATE_FILE" 2>/d
 case "$PHASE" in
   P0) NAME="等待任务" ;;
   P1) NAME="需求+设计" ;;
-  P3) NAME="编码实现" ;;
-  P4) NAME="测试验证" ;;
-  P5) NAME="综合审查" ;;
-  P6) NAME="部署交付" ;;
+  P2) NAME="编码实现" ;;
+  P3) NAME="测试验证" ;;
+  P4) NAME="综合审查" ;;
+  P5) NAME="部署交付" ;;
   *)  NAME="未知" ;;
 esac
 
-# 进度条（五阶段：P1→P3→P4→P5→P6）
+# 进度条（五阶段：P1→P2→P3→P4→P5）
 PHASE_NUM=$(echo "$PHASE" | sed 's/[^0-9]//g')
 PHASE_NUM=${PHASE_NUM:-0}
 case "$PHASE_NUM" in
-  0) FILLED=0 ;; 1) FILLED=1 ;; 3) FILLED=2 ;; 4) FILLED=3 ;; 5) FILLED=4 ;; 6) FILLED=5 ;; *) FILLED=0 ;;
+  0) FILLED=0 ;; 1) FILLED=1 ;; 2) FILLED=2 ;; 3) FILLED=3 ;; 4) FILLED=4 ;; 5) FILLED=5 ;; *) FILLED=0 ;;
 esac
 BAR=""
 for i in 1 2 3 4 5; do

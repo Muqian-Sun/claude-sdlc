@@ -30,10 +30,10 @@ PHASE_NUM="${PHASE_NUM:-0}"
 CHECKS=""
 if [ "$PHASE_NUM" -eq 1 ]; then
   CHECKS="阶段P1：展示 PRD（含架构+原型）后等待用户确认，不要自问自答。"
-elif [ "$PHASE_NUM" -ge 3 ] && [ "$PHASE_NUM" -le 5 ]; then
+elif [ "$PHASE_NUM" -ge 2 ] && [ "$PHASE_NUM" -le 4 ]; then
   CHECKS="自动驱动阶段(P${PHASE_NUM})：(1) 当前阶段工作是否完成？(2) modified_files 是否最新？(3) 完成后执行 /review 审查再推进。"
-elif [ "$PHASE_NUM" -eq 6 ]; then
-  CHECKS="P6 交付阶段：确认已输出交付摘要（PRD 完成率、修改文件、测试结果、Git 提交信息）。"
+elif [ "$PHASE_NUM" -eq 5 ]; then
+  CHECKS="P5 交付阶段：确认已输出交付摘要（PRD 完成率、修改文件、测试结果、Git 提交信息）。"
 fi
 
 [ "${HAS_LU:-0}" -eq 0 ] && CHECKS="${CHECKS} 注意：last_updated 未设置，请更新 project-state.md。"

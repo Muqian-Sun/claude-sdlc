@@ -17,8 +17,8 @@ if [ -z "$PHASE" ] || [ "$PHASE" = "P0" ]; then
   exit 0
 fi
 
-# 仅在自动驱动阶段（P3-P5）检查
-if [ "$PHASE_NUM" -lt 3 ] || [ "$PHASE_NUM" -gt 5 ]; then
+# 仅在自动驱动阶段（P2-P4）检查
+if [ "$PHASE_NUM" -lt 2 ] || [ "$PHASE_NUM" -gt 4 ]; then
   exit 0
 fi
 

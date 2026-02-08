@@ -29,7 +29,7 @@
     "PreToolUse": [
       {
         "matcher": "Write|Edit",
-        "description": "P3 前拦截代码文件写入",
+        "description": "P2 前拦截代码文件写入",
         "hooks": [
           {
             "type": "command",
@@ -41,7 +41,7 @@
       },
       {
         "matcher": "Bash",
-        "description": "P4 前拦截测试命令，P6 前拦截 git 提交",
+        "description": "P3 前拦截测试命令，P5 前拦截 git 提交",
         "hooks": [
           {
             "type": "command",
@@ -222,7 +222,7 @@
   },
   "env": {
     "SDLC_PROJECT": "true",
-    "SDLC_VERSION": "1.6.0"
+    "SDLC_VERSION": "1.7.0"
   },
   "attribution": {
     "commit": "Co-Authored-By: Claude (SDLC Enforced) <noreply@anthropic.com>"

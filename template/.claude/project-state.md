@@ -9,7 +9,7 @@ completed_tasks: []  # 已完成任务归档（task/prd_summary/key_decisions/fi
 global_architecture: []  # 跨任务架构决策
 
 # === 当前任务（重置时归档到 completed_tasks 后清空） ===
-current_phase: P0  # P0=未开始, P1=需求+设计, P3=编码, P4=测试, P5=审查, P6=部署
+current_phase: P0  # P0=未开始, P1=需求+设计, P2=编码, P3=测试, P4=审查, P5=部署
 task_description: ""
 started_at: ""
 last_updated: ""
@@ -38,4 +38,4 @@ key_context: ""  # compaction 恢复用
 
 # Compact Instructions
 
-压缩时必须保留：(1) 本文件完整 YAML 块 (2) project_roadmap/completed_tasks/global_architecture (3) 当前阶段+任务+已修改文件 (4) 用户最近指令。恢复后：P1 等用户确认，P3-P6 自动恢复驱动。
+压缩时必须保留：(1) 本文件完整 YAML 块 (2) project_roadmap/completed_tasks/global_architecture (3) 当前阶段+任务+已修改文件 (4) 用户最近指令。恢复后：P1 等用户确认，P2-P5 自动恢复驱动。

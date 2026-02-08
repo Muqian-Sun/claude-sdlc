@@ -50,11 +50,11 @@ case "$TOOL_NAME" in
           MESSAGE="阶段 P${PHASE_NUM} 不允许修改文件"
         fi ;;
       *)
-        if [ "$PHASE_NUM" -ge 3 ]; then
+        if [ "$PHASE_NUM" -ge 2 ]; then
           BEHAVIOR="allow"
         else
           BEHAVIOR="deny"
-          MESSAGE="阶段 P${PHASE_NUM} 不允许修改代码文件（P3 起可用，P1 仅允许原型 HTML/CSS）"
+          MESSAGE="阶段 P${PHASE_NUM} 不允许修改代码文件（P2 起可用，P1 仅允许原型 HTML/CSS）"
         fi ;;
     esac
     ;;
@@ -66,21 +66,21 @@ case "$TOOL_NAME" in
       *rm\ -rf*|*--force*|*reset\ --hard*)
         exit 0 ;;  # 危险命令交给用户
       git\ commit*|git\ push*|git\ tag*|git\ merge\ *)
-        [ "$PHASE_NUM" -ge 6 ] && BEHAVIOR="allow" || { BEHAVIOR="deny"; MESSAGE="Git 提交操作仅 P6 允许"; } ;;
+        [ "$PHASE_NUM" -ge 5 ] && BEHAVIOR="allow" || { BEHAVIOR="deny"; MESSAGE="Git 提交操作仅 P5 允许"; } ;;
       npm\ test*|npx\ jest*|npx\ vitest*|npx\ mocha*|yarn\ test*|pnpm\ test*|pytest*|go\ test*|cargo\ test*|mvn\ test*|jest\ *|vitest\ *|mocha\ *)
-        [ "$PHASE_NUM" -ge 4 ] && BEHAVIOR="allow" || { BEHAVIOR="deny"; MESSAGE="测试命令仅 P4 起允许"; } ;;
+        [ "$PHASE_NUM" -ge 3 ] && BEHAVIOR="allow" || { BEHAVIOR="deny"; MESSAGE="测试命令仅 P3 起允许"; } ;;
       npx\ eslint*|npx\ tsc*|npm\ run\ lint*|npm\ run\ build*)
         BEHAVIOR="allow" ;;
       *)
-        [ "$PHASE_NUM" -ge 3 ] && BEHAVIOR="allow" ;;
+        [ "$PHASE_NUM" -ge 2 ] && BEHAVIOR="allow" ;;
     esac
     ;;
   Chrome)
-    if [ "$PHASE_NUM" -eq 1 ] || [ "$PHASE_NUM" -ge 4 ]; then
+    if [ "$PHASE_NUM" -eq 1 ] || [ "$PHASE_NUM" -ge 3 ]; then
       BEHAVIOR="allow"
     else
       BEHAVIOR="deny"
-      MESSAGE="Chrome 仅在 P1（原型展示）和 P4+（测试/审查）阶段允许"
+      MESSAGE="Chrome 仅在 P1（原型展示）和 P3+（测试/审查）阶段允许"
     fi
     ;;
   Read|Glob|Grep|WebSearch|WebFetch)

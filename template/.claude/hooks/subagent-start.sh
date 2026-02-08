@@ -22,9 +22,9 @@ eval "$(awk '
 
 # 阶段工具限制
 case "$PHASE" in
-  P3) TOOLS_NOTE="P3 编码阶段：可用 Read/Glob/Grep/Write/Edit/Bash（非测试非 git），严格按 PRD 编码" ;;
-  P4) TOOLS_NOTE="P4 测试阶段：可用 Read/Glob/Grep/Write/Edit/Bash（含测试），每条 PRD 需求至少一个测试" ;;
-  P5) TOOLS_NOTE="P5 审查阶段：可用 Read/Glob/Grep，Write/Edit 仅修复审查问题" ;;
+  P2) TOOLS_NOTE="P2 编码阶段：可用 Read/Glob/Grep/Write/Edit/Bash（非测试非 git），严格按 PRD 编码" ;;
+  P3) TOOLS_NOTE="P3 测试阶段：可用 Read/Glob/Grep/Write/Edit/Bash（含测试），每条 PRD 需求至少一个测试" ;;
+  P4) TOOLS_NOTE="P4 审查阶段：可用 Read/Glob/Grep，Write/Edit 仅修复审查问题" ;;
   *)  TOOLS_NOTE="当前阶段 ${PHASE}，请遵守该阶段工具限制" ;;
 esac
 

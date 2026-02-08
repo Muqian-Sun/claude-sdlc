@@ -13,7 +13,7 @@ eval "$(awk '
 
 PHASE_NUM=${PHASE_NUM:-0}
 
-if [ "$PHASE_NUM" -lt 3 ] || [ "$PHASE_NUM" -gt 5 ]; then
+if [ "$PHASE_NUM" -lt 2 ] || [ "$PHASE_NUM" -gt 4 ]; then
   exit 0
 fi
 
