@@ -12,7 +12,7 @@
 | 长对话漂移 | 渐忘规范 | UserPromptSubmit 每次注入 + Stop 回复后自检 |
 | Context Compaction | 早期对话丢失 | PreCompact 保存状态 → SessionStart 恢复注入 |
 | 用户催促跳过 | 放弃规范 | Hooks 硬拦截 + Permissions 声明式 deny |
-| 新任务覆盖 | 状态残留 | 新任务检测 → 自动重置 |
+| 新任务覆盖 | 长期规划丢失 | 归档到 completed_tasks → 仅重置任务字段 → project_roadmap/completed_tasks/global_architecture 永不重置 |
 | Claude 自行跳过 | 认为不需要流程 | CLAUDE.md 明确要求 |
 | 子 Agent 脱离 | 不知 SDLC 上下文 | SubagentStart hook 注入阶段+PRD+工具限制 |
 | 子任务不合规 | 代码不符 PRD | TaskCompleted hook 提醒验证 |
@@ -71,7 +71,7 @@
 | 用户要求跳过流程 | 说明风险 → 用户确认 → 记录 phase_history → 强制推进 |
 | 审查未通过 | 自动修复重试（最多3次）→ 仍失败则停下请求用户帮助 |
 | 多次审查失败 | 停止自动驱动 → 报告问题 → 等待用户指导 |
-| 新任务 | 归档旧任务 → 重置状态 → 新 P1 |
+| 新任务 | 归档旧任务到 `completed_tasks` → 仅重置任务字段 → 保留 `project_roadmap`/`completed_tasks`/`global_architecture` → 新 P1 参考已有规划 |
 
 ---
 
@@ -84,7 +84,7 @@
 4. 【状态】project-state.md 最新吗？
 
 **深度自检（阶段转换 / compaction 后 / /status 时）**：
-Read project-state.md → 逐项确认 phase/task/modified_files/architecture_decisions/todo_items/phase_history → 有异常向用户报告。
+Read project-state.md → 逐项确认 phase/task/modified_files/architecture_decisions/todo_items/phase_history/**project_roadmap**/**completed_tasks**/**global_architecture** → 有异常向用户报告。
 
 **疑问时**：不猜测，Read `.claude/project-state.md`。
 

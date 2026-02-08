@@ -7,11 +7,13 @@
 ## P1 — 需求分析
 
 ### 阶段活动
+- **检查 `project_roadmap` 和 `completed_tasks`** — 了解长期规划和已完成的工作，确保新任务与整体规划一致
 - 理解用户需求，逐条澄清，消除模糊点
-- 分析现有代码库（Read, Glob, Grep）
+- 分析现有代码库（Read, Glob, Grep），参考 `global_architecture` 中的全局架构决策
 - 识别技术约束、依赖关系和影响范围
 - 搜索相关文档和最佳实践（WebSearch, WebFetch）
 - **整理编号化 PRD 需求清单，提交给用户确认**
+- 如用户提供了多阶段计划，写入 `project_roadmap`
 
 ### 必需产出物
 - PRD（每条需求有编号 R1/R2...、验收标准、范围排除项）
