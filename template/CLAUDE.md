@@ -1,6 +1,6 @@
 # SDLC 开发规范
 
-> 可用命令：`/phase`、`/status`、`/checkpoint`、`/review`
+> 可用命令：`/phase`、`/status`、`/checkpoint`、`/review`、`/archive`
 
 @.claude/project-state.md
 
@@ -35,4 +35,8 @@
 
 **Bash 格式**：所有命令必须单行。禁止在 `2>&1`、`|`、`&&` 前换行。
 **测试效率**：只跑一次（`tee /tmp/sdlc-test-output.txt`），Read 分析结果，批量修复后再跑一次。最多 3 次。
-**输出精简**：报告/PRD/文档使用简洁格式，避免冗余描述、装饰性内容、重复说明。优先表格/列表。
+**输出精简**：报告/PRD/文档使用简洁格式（详见 09-memory-management.md）：
+- 一句话原则：能用一句话不用两句
+- 表格优先：结构化信息用表格
+- 长度限制：PRD≤150行，审查≤15行，交付≤10行
+- 记忆精简：completed_tasks 用精简格式，≥5个时自动归档

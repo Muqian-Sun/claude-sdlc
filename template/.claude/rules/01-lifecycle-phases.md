@@ -21,10 +21,19 @@
 1. 基于调研结果创建自包含原型 HTML（内联 CSS/JS），用 Chrome 打开展示给用户
 2. 原型确定的视觉风格作为 PRD 的一部分，用户确认后锁定
 
-### 4. PRD 确认
-1. 向用户展示完整 PRD：每条需求编号 R1/R2...、验收标准、范围排除项 + **架构方案**（技术选型、模块划分、数据模型）+ UI 原型
-2. 用户确认 → 写入 project-state.md 的 `prd` + `architecture_decisions` 字段
+### 4. PRD 确认（精简格式）
+1. 向用户展示 PRD（表格格式，总长度≤150行）：
+   - **需求表**：ID | 需求（≤30字）| 验收标准（1条，可测试）
+   - **架构**：技术栈 + 核心模块（≤5条关键决策）
+   - **原型**：文件路径（已在 Chrome 展示过）
+2. 用户确认 → 写入 project-state.md 的 `prd` + `architecture_decisions`（精简格式，见 09-memory-management.md）
 3. PRD 写入即锁定，后续阶段以此为唯一依据。如需修改 → 回 P1 重新获用户确认
+
+**PRD 精简要求**：
+- 需求描述 ≤30字（一句话核心功能）
+- 验收标准 1条（可量化、可测试）
+- 无范围排除项（默认只实现列出的需求）
+- 架构决策 ≤5条（技术栈 + 核心模式）
 
 ### 允许工具
 ✅ Read, Glob, Grep, WebSearch, WebFetch, Context7 MCP, Chrome, Write/Edit（仅原型） ❌ Bash
