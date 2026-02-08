@@ -1,54 +1,41 @@
 #!/usr/bin/env bash
 # check-phase-test.sh — PreToolUse hook for Bash
 # 拦截：(1) P4 前的测试命令 (2) P6 前的 git commit/push
+# 性能：bash 内置提取 + case 匹配，典型路径 1-2 个子进程
 set -euo pipefail
 
 INPUT=$(cat)
 
-# 提取命令 — jq 优先，sed 兜底
-if command -v jq &>/dev/null; then
-  COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
-else
-  COMMAND=$(echo "$INPUT" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' 2>/dev/null | head -1)
-fi
-
+# 提取命令 — bash 内置字符串操作（零子进程）
+_t="${INPUT#*\"command\"}"
+[ "$_t" = "$INPUT" ] && exit 0
+_t="${_t#*\"}"
+COMMAND="${_t%%\"*}"
 [ -z "$COMMAND" ] && exit 0
 
-# 读取阶段 — 单次 awk 提取
+# 读取阶段 — 单次 awk
 STATE_FILE="${CLAUDE_PROJECT_DIR:-.}/.claude/project-state.md"
-if [ -f "$STATE_FILE" ]; then
-  PHASE_NUM=$(awk '/^current_phase:/{gsub(/[^0-9]/,"",$2); print $2; exit}' "$STATE_FILE" 2>/dev/null)
-fi
-PHASE_NUM="${PHASE_NUM:-${SDLC_PHASE:+$(echo "$SDLC_PHASE" | sed 's/[^0-9]//g')}}"
+[ ! -f "$STATE_FILE" ] && exit 0
+PHASE_NUM=$(awk '/^current_phase:/{gsub(/[^0-9]/,"",$2); print $2; exit}' "$STATE_FILE" 2>/dev/null)
 [ -z "$PHASE_NUM" ] && exit 0
 
-CURRENT_PHASE="P${PHASE_NUM}"
+# P6+ 所有命令放行
+[ "$PHASE_NUM" -ge 6 ] && exit 0
 
-# 检查 1：Git write 操作（P6 前拦截）
-if echo "$COMMAND" | grep -qiE 'git[[:space:]]+(commit|push|tag|merge)[[:space:]]'; then
-  if [ "$PHASE_NUM" -lt 6 ]; then
-    REASON="当前阶段 ${CURRENT_PHASE} 不允许执行 Git 提交/推送操作（P6 起可用）"
-    if command -v jq &>/dev/null; then
-      jq -n --arg r "$REASON" '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
-    else
-      printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"%s"}}' "$REASON"
-    fi
-    exit 0
-  fi
-  exit 0
-fi
+# Git write 操作（P6 前拦截）— bash case（零子进程）
+case "$COMMAND" in
+  git\ commit*|git\ push*|git\ tag*|git\ merge\ *)
+    printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"当前阶段 P%s 不允许执行 Git 提交/推送操作（P6 起可用）"}}' "$PHASE_NUM"
+    exit 0 ;;
+esac
 
-# 检查 2：测试命令（P4 前拦截）— 单条合并正则
-TEST_REGEX='(^|[;&|]\s*)(npm\s+(test|run\s+test)|npx\s+(jest|vitest|mocha)|yarn\s+test|pnpm\s+test|pytest|python\s+-m\s+(pytest|unittest)|go\s+test|cargo\s+test|mvn\s+test|gradle\s*test|gradlew\s+test|dotnet\s+test|rspec|bundle\s+exec\s+rspec|phpunit|swift\s+test|flutter\s+test|mix\s+test|jest|vitest|mocha)(\s|$|;|&|\|)'
+# P4+ 不需要测试检查
+[ "$PHASE_NUM" -ge 4 ] && exit 0
 
-if echo "$COMMAND" | grep -qiE "$TEST_REGEX"; then
-  [ "$PHASE_NUM" -ge 4 ] && exit 0
-  REASON="当前阶段 ${CURRENT_PHASE} 不允许执行测试命令（P4 起可用）"
-  if command -v jq &>/dev/null; then
-    jq -n --arg r "$REASON" '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
-  else
-    printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"%s"}}' "$REASON"
-  fi
+# 测试命令（P4 前拦截）— grep + here-string（1 个子进程，仅 P1-P3 执行）
+TEST_RE='(^|[;&|] *)(npm (test|run test)|npx (jest|vitest|mocha)|yarn test|pnpm test|pytest|python -m (pytest|unittest)|go test|cargo test|mvn test|gradle *test|gradlew test|dotnet test|rspec|bundle exec rspec|phpunit|swift test|flutter test|mix test|jest|vitest|mocha)( |$|;|&|\|)'
+if grep -qE "$TEST_RE" <<< "$COMMAND"; then
+  printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"当前阶段 P%s 不允许执行测试命令（P4 起可用）"}}' "$PHASE_NUM"
   exit 0
 fi
 

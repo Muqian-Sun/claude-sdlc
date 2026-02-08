@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 # check-phase-write.sh — PreToolUse hook for Write/Edit
 # P3 前拦截代码文件写入，文档/配置文件任何阶段放行，P2 允许原型 HTML/CSS
+# 性能：bash 内置提取 + case 匹配，典型路径 1-2 个子进程
 set -euo pipefail
 
 INPUT=$(cat)
 
-# 提取文件路径
-if command -v jq &>/dev/null; then
-  FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
-else
-  FILE_PATH=$(echo "$INPUT" | sed -n 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' 2>/dev/null | head -1)
-fi
-
+# 提取文件路径 — bash 内置字符串操作（零子进程）
+_t="${INPUT#*\"file_path\"}"
+[ "$_t" = "$INPUT" ] && exit 0
+_t="${_t#*\"}"
+FILE_PATH="${_t%%\"*}"
 [ -z "$FILE_PATH" ] && exit 0
 
 # 文档/配置文件扩展名 — 兼容 bash 3.2（macOS 默认）
@@ -27,10 +26,8 @@ esac
 
 # 读取阶段 — 单次 awk
 STATE_FILE="${CLAUDE_PROJECT_DIR:-.}/.claude/project-state.md"
-if [ -f "$STATE_FILE" ]; then
-  PHASE_NUM=$(awk '/^current_phase:/{gsub(/[^0-9]/,"",$2); print $2; exit}' "$STATE_FILE" 2>/dev/null)
-fi
-PHASE_NUM="${PHASE_NUM:-${SDLC_PHASE:+$(echo "$SDLC_PHASE" | sed 's/[^0-9]//g')}}"
+[ ! -f "$STATE_FILE" ] && exit 0
+PHASE_NUM=$(awk '/^current_phase:/{gsub(/[^0-9]/,"",$2); print $2; exit}' "$STATE_FILE" 2>/dev/null)
 [ -z "$PHASE_NUM" ] && exit 0
 
 # P3+ 放行所有代码文件
@@ -43,11 +40,6 @@ if [ "$PHASE_NUM" -eq 2 ]; then
   esac
 fi
 
-# 拦截 — JSON permissionDecision 格式
-REASON="当前阶段 P${PHASE_NUM} 不允许修改代码文件（P3 起可用，P2 仅允许原型 HTML/CSS）"
-if command -v jq &>/dev/null; then
-  jq -n --arg r "$REASON" '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
-else
-  printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"%s"}}' "$REASON"
-fi
+# 拦截 — JSON permissionDecision 格式（printf 零子进程）
+printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"当前阶段 P%s 不允许修改代码文件（P3 起可用，P2 仅允许原型 HTML/CSS）"}}' "$PHASE_NUM"
 exit 0

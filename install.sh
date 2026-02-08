@@ -101,7 +101,6 @@ success "已安装 CLAUDE.md"
 # === Step 3: 创建 .claude 目录结构 ===
 mkdir -p "$TARGET_DIR/.claude/rules"
 mkdir -p "$TARGET_DIR/.claude/hooks"
-mkdir -p "$TARGET_DIR/.claude/commands"
 mkdir -p "$TARGET_DIR/.claude/skills"
 mkdir -p "$TARGET_DIR/.claude/agents"
 mkdir -p "$TARGET_DIR/.claude/reviews"
@@ -124,15 +123,7 @@ for hook_file in "$TEMPLATE_DIR/.claude/hooks"/*.sh; do
   fi
 done
 
-# === Step 6: 复制 commands ===
-for cmd_file in "$TEMPLATE_DIR/.claude/commands"/*.md; do
-  if [ -f "$cmd_file" ]; then
-    cp "$cmd_file" "$TARGET_DIR/.claude/commands/"
-    success "已安装命令：$(basename "$cmd_file")"
-  fi
-done
-
-# === Step 6b: 复制 skills ===
+# === Step 6: 复制 skills ===
 if [ -d "$TEMPLATE_DIR/.claude/skills" ]; then
   for skill_dir in "$TEMPLATE_DIR/.claude/skills"/*/; do
     if [ -d "$skill_dir" ]; then
@@ -146,7 +137,7 @@ if [ -d "$TEMPLATE_DIR/.claude/skills" ]; then
   done
 fi
 
-# === Step 6c: 复制 agents ===
+# === Step 7: 复制 agents ===
 for agent_file in "$TEMPLATE_DIR/.claude/agents"/*.md; do
   if [ -f "$agent_file" ]; then
     cp "$agent_file" "$TARGET_DIR/.claude/agents/"
@@ -154,7 +145,7 @@ for agent_file in "$TEMPLATE_DIR/.claude/agents"/*.md; do
   fi
 done
 
-# === Step 7: 智能合并 settings.json ===
+# === Step 8: 智能合并 settings.json ===
 TARGET_SETTINGS="$TARGET_DIR/.claude/settings.json"
 SOURCE_SETTINGS="$TEMPLATE_DIR/.claude/settings.json"
 
@@ -216,7 +207,7 @@ else
   success "已安装 settings.json"
 fi
 
-# === Step 8: 安装完成 ===
+# === Step 9: 安装完成 ===
 echo ""
 echo "========================================"
 echo -e "  ${GREEN}安装完成！${NC}"
@@ -231,7 +222,6 @@ echo "      ├── settings.json            (Hooks + Permissions 配置)"
 echo "      ├── rules/                   (8 个规则文件，自动加载)"
 echo "      ├── hooks/                   (14 个 Hook 脚本，运行时拦截)"
 echo "      ├── skills/                  (4 个 Skills: /phase /status /checkpoint /review)"
-echo "      ├── commands/                (4 个斜杠命令 fallback)"
 echo "      ├── agents/                  (3 个自定义 Agent: coder/tester/reviewer)"
 echo "      └── reviews/                 (审查报告持久化)"
 echo ""

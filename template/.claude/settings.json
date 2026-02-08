@@ -122,7 +122,7 @@
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/subagent-stop.sh",
-            "timeout": 10,
+            "timeout": 5,
             "statusMessage": "验证子 Agent 输出..."
           }
         ]
@@ -160,7 +160,7 @@
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-end.sh",
-            "timeout": 10
+            "timeout": 5
           }
         ]
       }
@@ -184,8 +184,19 @@
       "Bash(git branch --list *)",
       "Bash(git stash *)",
       "Bash(npm run lint *)",
+      "Bash(npm run lint)",
+      "Bash(npm run build *)",
+      "Bash(npm run build)",
       "Bash(npx eslint *)",
       "Bash(npx tsc *)",
+      "Bash(npm test *)",
+      "Bash(npm test)",
+      "Bash(npx vitest *)",
+      "Bash(npx jest *)",
+      "Bash(npx mocha *)",
+      "Bash(pytest *)",
+      "Bash(go test *)",
+      "Bash(cargo test *)",
       "Read(*)",
       "Glob(*)",
       "Grep(*)"
@@ -211,7 +222,7 @@
   },
   "env": {
     "SDLC_PROJECT": "true",
-    "SDLC_VERSION": "1.4.0"
+    "SDLC_VERSION": "1.5.0"
   },
   "attribution": {
     "commit": "Co-Authored-By: Claude (SDLC Enforced) <noreply@anthropic.com>"

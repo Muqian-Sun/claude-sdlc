@@ -1,14 +1,12 @@
 #!/bin/bash
 # Stop — 回复后轻量自检
+# 性能：bash case 检查 stop_hook_active（零子进程），单次 awk 提取状态
 INPUT=$(cat)
 
-# 检查 stop_hook_active 防止无限循环（官方要求）
-if command -v jq &>/dev/null; then
-  ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null)
-else
-  ACTIVE=$(echo "$INPUT" | grep -o '"stop_hook_active"[[:space:]]*:[[:space:]]*true' 2>/dev/null)
-fi
-if [ "$ACTIVE" = "true" ] || [ -n "$ACTIVE" ]; then exit 0; fi
+# 检查 stop_hook_active 防止无限循环 — bash case（零子进程）
+case "$INPUT" in
+  *'"stop_hook_active"'*true*) exit 0 ;;
+esac
 
 STATE_FILE="${CLAUDE_PROJECT_DIR:-.}/.claude/project-state.md"
 [ ! -f "$STATE_FILE" ] && exit 0

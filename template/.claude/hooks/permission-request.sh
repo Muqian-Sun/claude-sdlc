@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # PermissionRequest — 根据 SDLC 阶段自动决策权限
+# 性能：bash 内置提取 + case 匹配，典型路径 1 个子进程（awk）
 set -euo pipefail
 
 INPUT=$(cat)
@@ -12,14 +13,22 @@ if [ -f "$STATE_FILE" ]; then
 fi
 PHASE_NUM="${PHASE_NUM:-0}"
 
-# 提取工具信息
-TOOL_NAME=""
+# 提取工具信息 — bash 内置字符串操作（零子进程）
+_t="${INPUT#*\"tool_name\"}"
+_t="${_t#*\"}"
+TOOL_NAME="${_t%%\"*}"
+
 TOOL_ACTION=""
-if command -v jq &>/dev/null; then
-  TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // ""' 2>/dev/null)
-  TOOL_ACTION=$(echo "$INPUT" | jq -r '.tool_input.command // .tool_input.file_path // ""' 2>/dev/null)
+_t2="${INPUT#*\"command\"}"
+if [ "$_t2" != "$INPUT" ]; then
+  _t2="${_t2#*\"}"
+  TOOL_ACTION="${_t2%%\"*}"
 else
-  TOOL_NAME=$(echo "$INPUT" | sed -n 's/.*"tool_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' 2>/dev/null | head -1)
+  _t2="${INPUT#*\"file_path\"}"
+  if [ "$_t2" != "$INPUT" ]; then
+    _t2="${_t2#*\"}"
+    TOOL_ACTION="${_t2%%\"*}"
+  fi
 fi
 
 BEHAVIOR="allow"
@@ -42,19 +51,21 @@ case "$TOOL_NAME" in
     esac
     ;;
   Bash)
-    if echo "$TOOL_ACTION" | grep -qiE '^git[[:space:]]+(status|diff|log|branch|stash)'; then
-      BEHAVIOR="allow"
-    elif echo "$TOOL_ACTION" | grep -qiE '(rm -rf|--force|reset --hard)'; then
-      exit 0  # 危险命令交给用户
-    elif echo "$TOOL_ACTION" | grep -qiE '^git[[:space:]]+(commit|push|tag|merge)'; then
-      [ "$PHASE_NUM" -ge 6 ] && BEHAVIOR="allow" || { BEHAVIOR="deny"; MESSAGE="Git 提交操作仅 P6 允许"; }
-    elif echo "$TOOL_ACTION" | grep -qiE '(npm test|npx jest|npx vitest|pytest|go test|cargo test)'; then
-      [ "$PHASE_NUM" -ge 4 ] && BEHAVIOR="allow" || { BEHAVIOR="deny"; MESSAGE="测试命令仅 P4 起允许"; }
-    elif echo "$TOOL_ACTION" | grep -qiE '^(npx eslint|npx tsc|npm run lint|npm run build)'; then
-      BEHAVIOR="allow"
-    else
-      [ "$PHASE_NUM" -ge 3 ] && BEHAVIOR="allow"
-    fi
+    # bash case 统一匹配（零子进程，替代 5 个 grep 调用）
+    case "$TOOL_ACTION" in
+      git\ status*|git\ diff*|git\ log*|git\ branch*|git\ stash*)
+        BEHAVIOR="allow" ;;
+      *rm\ -rf*|*--force*|*reset\ --hard*)
+        exit 0 ;;  # 危险命令交给用户
+      git\ commit*|git\ push*|git\ tag*|git\ merge\ *)
+        [ "$PHASE_NUM" -ge 6 ] && BEHAVIOR="allow" || { BEHAVIOR="deny"; MESSAGE="Git 提交操作仅 P6 允许"; } ;;
+      npm\ test*|npx\ jest*|npx\ vitest*|npx\ mocha*|yarn\ test*|pnpm\ test*|pytest*|go\ test*|cargo\ test*|mvn\ test*|jest\ *|vitest\ *|mocha\ *)
+        [ "$PHASE_NUM" -ge 4 ] && BEHAVIOR="allow" || { BEHAVIOR="deny"; MESSAGE="测试命令仅 P4 起允许"; } ;;
+      npx\ eslint*|npx\ tsc*|npm\ run\ lint*|npm\ run\ build*)
+        BEHAVIOR="allow" ;;
+      *)
+        [ "$PHASE_NUM" -ge 3 ] && BEHAVIOR="allow" ;;
+    esac
     ;;
   Chrome)
     if [ "$PHASE_NUM" -eq 2 ] || [ "$PHASE_NUM" -eq 4 ]; then
