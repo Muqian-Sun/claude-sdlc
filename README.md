@@ -7,9 +7,13 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/claude-sdlc"><img src="https://img.shields.io/npm/v/claude-sdlc.svg" alt="npm version"/></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/npm/l/claude-sdlc.svg" alt="license"/></a>
-  <a href="https://www.npmjs.com/package/claude-sdlc"><img src="https://img.shields.io/npm/dm/claude-sdlc.svg" alt="downloads"/></a>
+  <a href="https://www.npmjs.com/package/claude-sdlc"><img src="https://img.shields.io/npm/v/claude-sdlc.svg?style=flat-square" alt="npm version"/></a>
+  <a href="https://www.npmjs.com/package/claude-sdlc"><img src="https://img.shields.io/npm/dm/claude-sdlc.svg?style=flat-square" alt="downloads"/></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/npm/l/claude-sdlc.svg?style=flat-square" alt="license"/></a>
+  <a href="https://github.com/Muqian-Sun/claude-sdlc"><img src="https://img.shields.io/github/stars/Muqian-Sun/claude-sdlc?style=flat-square" alt="stars"/></a>
+  <a href="https://github.com/Muqian-Sun/claude-sdlc/issues"><img src="https://img.shields.io/github/issues/Muqian-Sun/claude-sdlc?style=flat-square" alt="issues"/></a>
+  <a href="https://github.com/Muqian-Sun/claude-sdlc/commits"><img src="https://img.shields.io/github/last-commit/Muqian-Sun/claude-sdlc?style=flat-square" alt="last commit"/></a>
+  <a href="https://www.npmjs.com/package/claude-sdlc"><img src="https://img.shields.io/bundlephobia/min/claude-sdlc?style=flat-square" alt="size"/></a>
 </p>
 
 ---
