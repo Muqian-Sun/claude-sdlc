@@ -12,9 +12,14 @@
 - [x] package.json 配置完善
 
 ### ⬜ 待完成
-- [ ] npm 登录
-- [ ] npm 发布
-- [ ] 发布验证
+- [x] npm 登录
+- [x] npm 发布
+- [x] 发布验证
+
+**发布成功**：claude-sdlc@1.8.0 已成功发布到 npm！
+- npm 页面：https://www.npmjs.com/package/claude-sdlc
+- 发布时间：2025-02-09
+- 状态：✅ 公开可用
 
 ---
 

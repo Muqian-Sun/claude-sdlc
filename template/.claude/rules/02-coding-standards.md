@@ -58,9 +58,50 @@ paths:
 
 ---
 
+## UI/UX 编码规范（涉及 UI 时强制）
+
+### 必须遵循
+
+| 规范 | 说明 |
+|------|------|
+| **遵循原型** | 严格按 P1 确认的原型实现（配色/字体/间距不得擅自修改） |
+| **组件化** | 可复用元素必须提取为组件（按钮/输入框/卡片等） |
+| **现代组件库** | shadcn/ui、Radix、Ant Design 5+、Mantine（**禁止 Bootstrap 3/4、jQuery UI**） |
+| **CSS 组织** | CSS Modules / Tailwind / Styled-components（禁止全局样式冲突） |
+| **响应式** | 使用相对单位（%、rem、em），禁止固定像素宽度 |
+| **主题支持** | CSS Variables 定义颜色/间距，支持浅色/深色模式 |
+| **SVG 图标** | Lucide、Heroicons、Phosphor（**禁止 emoji 图标**） |
+
+### 禁止的实现方式
+
+| ❌ 禁止 | ✅ 替代 |
+|--------|--------|
+| 大量内联样式 `style={{}}` | CSS Modules / Tailwind |
+| 固定像素 `width: 300px` | 响应式 `max-width: 100%` |
+| `!important` 覆盖 | 合理 CSS 优先级 |
+| 硬编码颜色 `#3b82f6` | CSS 变量 `var(--color-primary)` |
+| jQuery 操作 DOM | 框架状态管理 |
+| float 布局 | Flexbox / Grid |
+| 90年代表格布局 | 现代布局系统 |
+
+### 可访问性（强制）
+
+- [ ] 所有交互元素 ≥44x44px
+- [ ] 对比度 ≥4.5:1（文本）
+- [ ] 键盘导航可用（Tab 顺序正确）
+- [ ] 表单有 `<label>` + `for` 属性
+- [ ] 图片有描述性 `alt` 文本
+- [ ] 图标按钮有 `aria-label`
+- [ ] 支持 `prefers-reduced-motion`
+
+详见 `.claude/rules/10-ui-ux-standards.md`
+
+---
+
 ## 检查要点
 
 - [ ] **PRD 符合性** — 所有代码都能对应到 PRD 某条需求
 - [ ] 函数≤50行、嵌套≤3层、单一职责
 - [ ] 无安全隐患（注入、XSS、敏感信息泄露）
 - [ ] 无硬编码的魔法数字/字符串
+- [ ] **UI/UX 规范**（涉及 UI 时）— 现代组件库、响应式、可访问性（见 10-ui-ux-standards.md）

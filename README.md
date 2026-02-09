@@ -44,6 +44,7 @@ npx claude-sdlc uninstall
 | 需要反复输入指令推进 | **自动驱动**：确认需求和设计后，编码到交付全自动 |
 | 规范需要每次手动提醒 | CLAUDE.md + rules/ 自动加载，14 个 Hooks 运行时拦截 |
 | Claude 自行加减功能 | **PRD 驱动**：严格按需求清单，每行代码对应 PRD |
+| **UI 设计很丑很土很过时** | **✨ UI/UX Pro Max 强制集成**：67 风格+96 配色+57 字体，禁止 Bootstrap 3/jQuery UI |
 | 每个阶段都要审查太慢 | **只审查一次**：P5 综合审查是唯一关卡，P3/P4/P6 完成即推进 |
 | 长对话后遗忘规范 | **多层防御** + 抗压缩机制，compaction 后自动恢复 |
 | 单线程开发效率低 | **3 个自定义 Agent** 并行编码/测试/审查 |
@@ -95,6 +96,25 @@ P3 编码 → P4 测试 → P5 综合审查（唯一审查）→ P6 交付 → �
 | sdlc-coder | P3 | 严格按 PRD 编码，禁止 PRD 外功能 |
 | sdlc-tester | P4 | 每条 PRD 需求至少一个测试 |
 | sdlc-reviewer | P5 | PRD 四环追溯（需求→设计→代码→测试） |
+
+### ✨ UI/UX Pro Max — 现代设计智能（自动安装）
+
+安装 SDLC 规范时**自动安装** UI/UX Pro Max Skill 作为依赖：
+
+| 特性 | 内容 |
+|------|------|
+| **67 种 UI 风格** | glassmorphism、claymorphism、minimalism、brutalism、neumorphism、bento grid 等 |
+| **96 个配色方案** | SaaS、电商、医疗、金融、教育等行业专属配色 |
+| **57 种字体配对** | 精选标题+正文字体组合（集成 Google Fonts）|
+| **99 条 UX 指南** | 可访问性、交互、性能、布局最佳实践 |
+| **25 种图表类型** | 数据可视化和仪表板推荐 |
+| **强制现代化** | ✅ shadcn/ui、Radix、Ant Design 5+ &nbsp; ❌ Bootstrap 3、jQuery UI、90年代风格 |
+
+**自动激活**：P1 阶段涉及 UI 时自动使用 ui-ux-pro-max skill 调研和设计。
+
+**质量保障**：P4 自动审查 Lighthouse（可访问性≥90）+ axe-core（0 违规）+ 响应式 + Core Web Vitals。
+
+---
 
 ### 4 个 Skills — 斜杠命令
 

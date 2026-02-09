@@ -86,17 +86,22 @@ info "模板目录：$TEMPLATE_DIR"
 info "目标项目：$TARGET_DIR"
 echo ""
 
-# === Step 1: 备份已有的 CLAUDE.md ===
+# === Step 1: 安装 CLAUDE.md ===
 if [ -f "$TARGET_DIR/CLAUDE.md" ]; then
-  BACKUP_FILE="$TARGET_DIR/CLAUDE.md.bak.$(date +%Y%m%d%H%M%S)"
-  warn "目标项目已有 CLAUDE.md，备份为：$(basename "$BACKUP_FILE")"
-  cp "$TARGET_DIR/CLAUDE.md" "$BACKUP_FILE"
-  success "已备份 CLAUDE.md"
+  # 已存在，检查是否需要更新
+  if diff -q "$TARGET_DIR/CLAUDE.md" "$TEMPLATE_DIR/CLAUDE.md" >/dev/null 2>&1; then
+    # 内容相同，跳过
+    info "CLAUDE.md 已是最新版本"
+  else
+    # 内容不同，直接覆盖
+    cp "$TEMPLATE_DIR/CLAUDE.md" "$TARGET_DIR/CLAUDE.md"
+    success "已更新 CLAUDE.md"
+  fi
+else
+  # 首次安装
+  cp "$TEMPLATE_DIR/CLAUDE.md" "$TARGET_DIR/CLAUDE.md"
+  success "已安装 CLAUDE.md"
 fi
-
-# === Step 2: 复制 CLAUDE.md ===
-cp "$TEMPLATE_DIR/CLAUDE.md" "$TARGET_DIR/CLAUDE.md"
-success "已安装 CLAUDE.md"
 
 # === Step 3: 创建 .claude 目录结构 ===
 mkdir -p "$TARGET_DIR/.claude/rules"
@@ -115,17 +120,7 @@ fi
 # === Step 3b: 安装 project-state.md ===
 TARGET_STATE="$TARGET_DIR/.claude/project-state.md"
 if [ -f "$TARGET_STATE" ]; then
-  success "project-state.md 已存在，跳过保护"
-elif [ -f "$TARGET_DIR/CLAUDE.md.bak."* ] 2>/dev/null; then
-  # 尝试从旧版 CLAUDE.md 备份中提取内嵌状态
-  LATEST_BACKUP=$(ls -t "$TARGET_DIR"/CLAUDE.md.bak.* 2>/dev/null | head -1)
-  if [ -n "$LATEST_BACKUP" ] && grep -q 'current_phase:.*P[1-6]' "$LATEST_BACKUP" 2>/dev/null; then
-    cp "$TEMPLATE_DIR/.claude/project-state.md" "$TARGET_STATE"
-    warn "从旧版 CLAUDE.md 检测到活跃状态，请手动迁移到 project-state.md"
-  else
-    cp "$TEMPLATE_DIR/.claude/project-state.md" "$TARGET_STATE"
-    success "已安装 project-state.md"
-  fi
+  info "project-state.md 已存在，保留不覆盖"
 else
   cp "$TEMPLATE_DIR/.claude/project-state.md" "$TARGET_STATE"
   success "已安装 project-state.md"
@@ -176,16 +171,8 @@ SOURCE_SETTINGS="$TEMPLATE_DIR/.claude/settings.json"
 
 if [ -f "$TARGET_SETTINGS" ]; then
   # 目标项目已有 settings.json，尝试智能合并
-  warn "目标项目已有 .claude/settings.json"
-
-  # 检查是否安装了 jq
   if command -v jq &>/dev/null; then
-    # 使用 jq 合并 hooks 配置
-    BACKUP_SETTINGS="$TARGET_SETTINGS.bak.$(date +%Y%m%d%H%M%S)"
-    cp "$TARGET_SETTINGS" "$BACKUP_SETTINGS"
-    warn "已备份原 settings.json 为：$(basename "$BACKUP_SETTINGS")"
-
-    # 合并策略：用新模板 hooks 覆盖旧版（按 matcher 匹配），保留用户其他配置
+    # 使用 jq 智能合并（hooks 覆盖，其他配置保留）
     MERGED=$(jq -s '
       .[0] as $existing | .[1] as $new |
       ($new.hooks // {}) as $nh |
@@ -196,31 +183,68 @@ if [ -f "$TARGET_SETTINGS" ]; then
         ))
       }
     ' "$TARGET_SETTINGS" "$SOURCE_SETTINGS" 2>/dev/null) || {
-      warn "自动合并失败，将覆盖安装 settings.json"
+      # 合并失败，直接覆盖
       cp "$SOURCE_SETTINGS" "$TARGET_SETTINGS"
-      success "已安装 settings.json（覆盖）"
+      warn "settings.json 合并失败，已覆盖为最新版本"
       MERGED=""
     }
 
     if [ -n "$MERGED" ]; then
       echo "$MERGED" > "$TARGET_SETTINGS"
-      success "已智能合并 settings.json（保留原有配置）"
+      success "已智能合并 settings.json"
     fi
   else
-    # 没有 jq，备份后覆盖
-    BACKUP_SETTINGS="$TARGET_SETTINGS.bak.$(date +%Y%m%d%H%M%S)"
-    cp "$TARGET_SETTINGS" "$BACKUP_SETTINGS"
-    warn "未安装 jq，无法智能合并。已备份原文件为：$(basename "$BACKUP_SETTINGS")"
+    # 没有 jq，直接覆盖
     cp "$SOURCE_SETTINGS" "$TARGET_SETTINGS"
-    success "已安装 settings.json（覆盖）"
+    warn "未安装 jq，已覆盖 settings.json（建议安装 jq 以启用智能合并）"
   fi
 else
-  # 目标项目没有 settings.json，直接复制
+  # 首次安装
   cp "$SOURCE_SETTINGS" "$TARGET_SETTINGS"
   success "已安装 settings.json"
 fi
 
-# === Step 9: 安装完成 ===
+# === Step 9: 自动安装 UI/UX Pro Max Skill（依赖） ===
+echo ""
+info "正在检查 UI/UX Pro Max Skill..."
+
+if [ -d "$TARGET_DIR/.claude/skills/ui-ux-pro-max" ]; then
+  success "UI/UX Pro Max Skill 已安装"
+else
+  info "UI/UX Pro Max Skill 未安装，开始自动安装..."
+
+  # 检查是否安装了 npm
+  if command -v npm &>/dev/null; then
+    # 安装 uipro-cli（如果未安装）
+    if ! command -v uipro &>/dev/null; then
+      info "正在全局安装 uipro-cli..."
+      npm install -g uipro-cli >/dev/null 2>&1 || {
+        warn "uipro-cli 安装失败，请手动安装 UI/UX Pro Max Skill："
+        echo "    npm install -g uipro-cli"
+        echo "    cd $TARGET_DIR"
+        echo "    uipro init --ai claude"
+      }
+    fi
+
+    # 运行 uipro init
+    if command -v uipro &>/dev/null; then
+      info "正在安装 UI/UX Pro Max Skill 到项目..."
+      cd "$TARGET_DIR" && uipro init --ai claude >/dev/null 2>&1 && {
+        success "✨ UI/UX Pro Max Skill 已自动安装"
+      } || {
+        warn "自动安装失败，请手动运行：cd $TARGET_DIR && uipro init --ai claude"
+      }
+    fi
+  else
+    warn "未检测到 npm，跳过 UI/UX Pro Max Skill 自动安装"
+    echo "    请手动安装："
+    echo "    1. npm install -g uipro-cli"
+    echo "    2. cd $TARGET_DIR"
+    echo "    3. uipro init --ai claude"
+  fi
+fi
+
+# === Step 10: 安装完成 ===
 echo ""
 echo "========================================"
 echo -e "  ${GREEN}安装完成！${NC}"
@@ -232,17 +256,34 @@ echo "  ├── CLAUDE.md                    (核心控制文件，自动加�
 echo "  └── .claude/"
 echo "      ├── project-state.md         (项目状态，升级时保留)"
 echo "      ├── settings.json            (Hooks + Permissions 配置)"
-echo "      ├── rules/                   (8 个规则文件，自动加载)"
+echo "      ├── rules/                   (10 个规则文件，含 UI/UX 规范)"
 echo "      ├── hooks/                   (14 个 Hook 脚本，运行时拦截)"
-echo "      ├── skills/                  (4 个 Skills: /phase /status /checkpoint /review)"
+echo "      ├── skills/"
+echo "      │   ├── phase/status/checkpoint/review  (4 个 SDLC Skills)"
+echo "      │   └── ui-ux-pro-max/       (✨ UI/UX 设计智能)"
 echo "      ├── agents/                  (3 个自定义 Agent: coder/tester/reviewer)"
 echo "      └── reviews/                 (审查报告持久化)"
 echo ""
+echo "✨ UI/UX Pro Max Skill 特性："
+echo "  - 67 种现代 UI 风格（glassmorphism、minimalism、brutalism 等）"
+echo "  - 96 个行业专属配色方案（SaaS、电商、医疗、金融等）"
+echo "  - 57 种精选字体配对（标题 + 正文）"
+echo "  - 99 条 UX 最佳实践指南"
+echo "  - 25 种数据可视化图表推荐"
+echo ""
 echo "使用方法："
 echo "  1. cd $TARGET_DIR"
-echo "  2. 启动 claude 即可自动加载 SDLC 规范"
-echo "  3. 使用 /phase 查看当前阶段"
-echo "  4. 使用 /status 查看项目状态"
+echo "  2. 启动 claude 即可自动加载 SDLC 规范 + UI/UX 规范"
+echo "  3. 说\"帮我设计一个登录页面\"→ 自动使用 UI/UX Pro Max"
+echo "  4. 使用 /phase 查看当前阶段"
+echo "  5. 使用 /status 查看项目状态"
+echo ""
+echo "强制 UI/UX 规范："
+echo "  ✅ P1 阶段自动使用 ui-ux-pro-max skill 调研和设计"
+echo "  ✅ 从 67 风格 + 96 配色 + 57 字体中选择（禁止随意配色）"
+echo "  ✅ 使用现代组件库（shadcn/ui、Radix、Ant Design 5+）"
+echo "  ❌ 禁止过时技术（Bootstrap 3/4、jQuery UI、90年代表格）"
+echo "  🔍 P4 自动审查：Lighthouse + axe-core + 响应式"
 echo ""
 echo "注意："
 echo "  - Hook 脚本在无 jq 时会自动降级为 sed 解析（仍然可用）"
