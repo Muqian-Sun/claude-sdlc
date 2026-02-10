@@ -19,6 +19,11 @@ current_phase: P0  # P0=未开始, P1=需求+设计, P2=编码, P3=测试, P4=�
 task_description: ""  # ≤30字
 started_at: ""
 last_updated: ""
+requirements_clarification:  # P1 需求澄清结果（临时，写入 prd 后删除）
+  priority_features: []  # 按优先级：必须功能、可选功能
+  target_users: ""  # 目标用户描述
+  constraints: []  # 技术约束、性能要求、兼容性要求
+  ui_preferences: ""  # UI 风格偏好或参考（如涉及 UI）
 prd:
   # - id: R1
   #   desc: "需求描述"  # ≤30字

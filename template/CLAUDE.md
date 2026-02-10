@@ -18,17 +18,36 @@
 - **自动驱动**：P1 用户确认 PRD 后，P2-P5 全自动。P4 审查未通过自动修复（最多3次）
 - **任务自动识别**：用户说"实现/修复/重构..." → 自动进入 P1。旧任务完成后新请求 → 归档到 `completed_tasks` + 重置任务字段 + 新 P1。**`project_roadmap`/`completed_tasks`/`global_architecture` 永不重置**
 
-## P1 调研+设计+原型
+## P1 需求澄清+调研+设计+原型
 
-**P1 写 PRD 前必须调研**：Context7 MCP 查最新文档 + WebSearch 查最新方案，然后设计架构（模块划分、数据模型、技术选型）。
+**P1 执行流程**：需求澄清（多轮对话）→ 技术调研 → PRD 确认 → 架构设计 → 原型设计
 
-**涉及 UI 时强制使用 ui-ux-pro-max skill**：
-1. **调研**：WebSearch 搜索 "{框架} modern UI 2026" + "{产品类型} UI best practices 2026"
-2. **设计系统**：从 67 风格+96 配色+57 字体配对中选择（禁止随意配色）
-3. **组件库**：shadcn/ui、Radix、Ant Design 5+（**禁止 Bootstrap 3/4、jQuery UI、90 年代表格、无样式 HTML**）
-4. **原型**：创建现代风格 HTML 用 Chrome 展示，必须应用设计系统（配色+字体+间距）
+### 1. 需求澄清（必须先执行）
+用户说"开发XX"时，**先多轮对话**获取信息：
+- 使用 AskUserQuestion 系统性提问：功能范围、优先级、目标用户、技术约束、UI偏好
+- 确认理解正确后记录到 project-state.md 的 `requirements_clarification`
+- 禁止凭过时记忆假设需求，禁止跳过对话直接调研
 
-PRD 包含需求+架构+原型+`ui_design`字段（风格/配色/字体/组件库），用户确认后锁定。禁止凭过时记忆写需求。
+### 2. 技术调研（需求澄清后）
+- Context7 MCP 查最新文档 + WebSearch 查最新方案（基于用户约束和场景）
+- **涉及 UI 强制用 ui-ux-pro-max**：WebSearch "{框架} modern UI 2026"，从 67 风格+96 配色+57 字体选择
+- 输出推荐技术栈和方案对比
+
+### 3. 编写 PRD 并确认（第一个检查点）
+- 基于需求澄清和调研，编写精简 PRD（≤150行）
+- 包含：需求表、技术栈、非功能需求、UI设计方向
+- **用户确认后写入 project-state.md 的 `prd`，删除 `requirements_clarification`**
+- PRD 确认后锁定，才能进入下一步
+
+### 4. 架构设计（PRD 确认后）
+模块划分、数据模型、接口定义、部署架构，写入 `architecture_decisions`
+
+### 5. 原型设计（涉及 UI，架构设计后）
+- 应用设计系统创建 HTML，Chrome 展示响应式（375/768/1440px）
+- 用户确认后写入 `ui_design`（风格/配色/字体/组件库/prototype路径）
+- **禁止 Bootstrap 3/4、jQuery UI、90年代风格**
+
+**最终确认（第二个检查点）→ 推进 P2 自动驱动**
 
 ## 每次回复前自检
 
